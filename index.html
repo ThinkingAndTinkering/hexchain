@@ -15,6 +15,7 @@
     autocapture: true,
     capture_pageview: true,
     capture_pageleave: true,
+    disable_session_recording: true,
     enable_recording_console_log: false,
   });
 </script>
@@ -917,10 +918,6 @@
       <div class="moves-value" id="moves">0</div>
       <div class="time-bonus" id="time-bonus"></div>
     </div>
-    <div class="moves-display" id="total-moves-display">
-      <label>Moves</label>
-      <div class="moves-value" id="total-moves">0</div>
-    </div>
     <div class="chain-info" id="chain-info"></div>
     <button class="btn-reshuffle" id="btn-reshuffle" aria-label="Reshuffle board">
       <span class="reshuffle-icon">&#x21BB;</span><span class="reshuffle-label">Shuffle</span><span class="reshuffle-count" id="reshuffle-count">1</span>
@@ -1045,6 +1042,7 @@ const FREEZE_AGE = 7;
 // Special tile types
 const TILE_WILD = 'wild';       // Rainbow tile — matches any color
 const TILE_NOVA = 'nova';       // Nova tile — clears all adjacent tiles when chained (earned after 5+ chain)
+const NOVA_ENABLED = false;     // Feature flag: set to true to re-enable nova tiles
 const WILDCARD_INTERVAL = 8;    // Drop a wildcard every N moves (8-10, randomized)
 
 let numColors = NUM_COLORS;
@@ -1247,7 +1245,6 @@ let chainInfoTimeout = null;
 const $score = document.getElementById('score');
 const $highscore = document.getElementById('highscore');
 const $moves = document.getElementById('moves');
-const $totalMoves = document.getElementById('total-moves');
 const $chainInfo = document.getElementById('chain-info');
 const $overlay = document.getElementById('overlay');
 const $tutorial = document.getElementById('tutorial');
@@ -2228,14 +2225,13 @@ function executeChain(path) {
   score += points;
   movesMade++;
   movesSinceWildcard++;
-  $totalMoves.textContent = movesMade;
   totalCleared += length;
   totalChains++;
   const prevBest = bestChain;
   if (length > bestChain) bestChain = length;
 
   // Earn special tiles from long chains
-  if (length >= 5) pendingNovas++;
+  if (NOVA_ENABLED && length >= 5) pendingNovas++;
 
   // Sprint: start timer on first chain, add time bonus for long chains
   if (gameMode === MODE_SPRINT) {
@@ -3189,18 +3185,14 @@ function initGame(mode = MODE_CLASSIC) {
   // Mode-specific UI
   const $movesLabel = document.getElementById('moves-label');
   const $movesDisplay = document.getElementById('moves-display');
-  const $totalMovesDisplay = document.getElementById('total-moves-display');
-  $totalMoves.textContent = 0;
   if (mode === MODE_SPRINT) {
     $movesLabel.textContent = 'Time';
     $moves.textContent = SPRINT_TIME;
     $movesDisplay.classList.add('sprint-timer');
-    $totalMovesDisplay.style.display = 'none'; // hide moves counter in Sprint
   } else {
     $movesLabel.textContent = 'Chains';
     $moves.textContent = 0;
     $movesDisplay.classList.remove('sprint-timer');
-    $totalMovesDisplay.style.display = 'flex';
   }
 
   // Highlight active mode button

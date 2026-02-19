@@ -24,14 +24,14 @@ Browser-based mobile puzzle game. Single HTML file, no frameworks, no build step
 
 ### Special Tiles
 - **Wildcard tile** (`TILE_WILD`): 6-colored hex with each wedge showing one of the 6 game colors + white center highlight + ✦ icon. Matches ANY color in chains. Spawns every 8-10 moves (randomized) as a refill tile. Path color is adopted from the first non-wild tile in the chain. **Never freezes. Never removed by color wipe** (only cleared if part of a chain).
-- **Nova tile** (`TILE_NOVA`): Horizontal white stripes alternating with tile color (70% opacity, thin bands) + prominent pulsating white border (no icon). Clearly recognizable as special. Earned after a 5+ chain (spawns on next refill). When included in a chain, all 6 adjacent tiles get highlighted (700ms glow), then cleared with particles + gravity fills gaps (+30 pts/tile, "NOVA!" float text). Sequential: highlight → disappear → gravity → then color wipe if applicable. **Never freezes. CAN be removed by color wipe** if it matches the wiped color.
+- **Nova tile** (`TILE_NOVA`): **DISABLED** via `NOVA_ENABLED = false` feature flag. All code retained — set flag to `true` to re-enable. Design: horizontal white stripes + pulsating white border. When enabled: earned after 5+ chain, clears 6 adjacent tiles on chain, never freezes, included in color wipe.
 - **Lightning tile**: REMOVED (was too confusing with wildcard + nova)
 
 ### Other Mechanics
 - **Streak multiplier**: Consecutive 4+ chains build a score multiplier: 1x → 1.5x → 2x → 2.5x... Resets on a 3-chain or reshuffle. "Nx STREAK!" float text shown. Multiplier displayed in chain info bar.
 - **Manual reshuffle**: 1 reshuffle per game (reduced from 2). Button in info bar with ↻ icon + count. When no valid chains exist, reshuffle button pulses and persistent red "NO MORE MOVES" banner shows. Resets streak.
-- **Classic mode**: Unlimited moves, 6 colors. Frozen tiles cause board lockup. No timer. Shows Chains + Moves counters.
-- **Sprint mode**: 45-second timer, 6 colors, NO freezing. Timer starts on first chain. Long chains earn bonus time: 4-chain +1s, 5-chain +2s, 6-chain +3s, 7+ chain +5s. Moves counter hidden.
+- **Classic mode**: Unlimited moves, 6 colors. Frozen tiles cause board lockup. No timer. Shows Chains counter.
+- **Sprint mode**: 45-second timer, 6 colors, NO freezing. Timer starts on first chain. Long chains earn bonus time: 4-chain +1s, 5-chain +2s, 6-chain +3s, 7+ chain +5s.
 - Chain tier feedback: Nice! (3) → Great! (4) → Amazing! (5) → Fantastic! (6) → INCREDIBLE! (7) → LEGENDARY! (8) → GODLIKE!! (10+)
 - Deadlock detection via flood-fill connected components (excludes frozen tiles, wildcards bridge adjacent colors)
 - **Game Over phrases**: Random selection from: "HEXED!", "HEX-AGAIN?", "SIX SIDES, ONE MORE TRY", "TOTAL HEX-LAPSE"
@@ -93,6 +93,7 @@ const NUM_COLORS = 6;
 const FREEZE_AGE = 7;          // base moves before tile freezes (6 after move 15)
 const MAX_RESHUFFLES = 1;
 const SPRINT_TIME = 45;        // seconds
+const NOVA_ENABLED = false;    // feature flag for nova tiles (disabled)
 const WILDCARD_INTERVAL = 8;   // wildcard every 8-10 moves
 const TIME_BONUSES = { 3: 0, 4: 1, 5: 2, 6: 3, 7: 5 };
 const SCORE_TABLE = { 3: 150, 4: 400, 5: 850, 6: 1500, 7: 2500, 8: 4000, 9: 6500, 10: 10000 };
