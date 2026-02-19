@@ -515,6 +515,9 @@
     z-index: 200;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px 0;
   }
 
   .tutorial.visible { display: flex; }
@@ -525,9 +528,14 @@
     padding: 28px 24px;
     width: 90%;
     max-width: 340px;
+    max-height: calc(100vh - 40px);
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     text-align: center;
     border: 1px solid rgba(255,255,255,0.06);
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    flex-shrink: 0;
   }
 
   .tutorial-content h2 {
