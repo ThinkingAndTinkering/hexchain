@@ -57,7 +57,7 @@ Target ranges: fast game 5-10K, good game 10-30K, great game high 5 digits.
 - **Helper**: `track(event, props)` wraps `posthog.capture()` with try/catch
 
 ## Storage
-- localStorage for high scores per mode, tutorial seen flag, leaderboard (top 100 entries with timestamps, filtered by today/month/all-time for display)
+- localStorage for high scores per mode, tutorial seen flag, leaderboard (top 100 entries with timestamps, filtered by mode Classic/Sprint + period today/month/all-time for display)
 
 ## Visual Design
 - Premium dark theme: `--bg-dark: #141419`, radial gradient background

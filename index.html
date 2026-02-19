@@ -693,6 +693,39 @@
     text-shadow: 0 0 16px var(--accent-glow);
   }
 
+  .lb-mode-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    padding: 3px;
+  }
+
+  .lb-mode-tab {
+    flex: 1;
+    padding: 8px 4px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .lb-mode-tab.active {
+    background: var(--accent);
+    color: var(--bg-dark);
+  }
+
+  .lb-mode-tab:active {
+    transform: scale(0.97);
+  }
+
   .lb-tabs {
     display: flex;
     gap: 4px;
@@ -772,13 +805,6 @@
   .lb-chain-cell {
     color: var(--accent);
     font-weight: 600;
-  }
-
-  .lb-mode-cell {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-dim);
   }
 
   .lb-date-cell {
@@ -1004,6 +1030,10 @@
 <div class="leaderboard" id="leaderboard">
   <div class="leaderboard-content">
     <h2>LEADERBOARD</h2>
+    <div class="lb-mode-tabs">
+      <button class="lb-mode-tab active" data-lb-mode="classic">Classic</button>
+      <button class="lb-mode-tab" data-lb-mode="sprint">Sprint</button>
+    </div>
     <div class="lb-tabs">
       <button class="lb-tab active" data-lb-tab="today">Today</button>
       <button class="lb-tab" data-lb-tab="month">Month</button>
@@ -3025,6 +3055,7 @@ function showToastMessage(msg) {
 const LB_KEY = 'hexchain-leaderboard';
 const LB_MAX = 10;
 let lbCurrentTab = 'today';
+let lbCurrentMode = 'classic';
 
 function loadLeaderboard() {
   try {
@@ -3055,7 +3086,7 @@ function addLeaderboardEntry(entryScore, entryBestChain, entryMode, entryCleared
   saveLeaderboard(entries);
 }
 
-function filterLeaderboardByPeriod(entries, period) {
+function filterLeaderboardEntries(entries, period, mode) {
   const now = Date.now();
   let cutoff;
   if (period === 'today') {
@@ -3070,7 +3101,7 @@ function filterLeaderboardByPeriod(entries, period) {
   } else {
     cutoff = 0; // all time
   }
-  return entries.filter(e => e.date >= cutoff).slice(0, LB_MAX);
+  return entries.filter(e => e.date >= cutoff && e.mode === mode).slice(0, LB_MAX);
 }
 
 function formatLbDate(ts) {
@@ -3080,14 +3111,20 @@ function formatLbDate(ts) {
   return `${month}/${day}`;
 }
 
-function renderLeaderboard(period) {
-  lbCurrentTab = period;
+function renderLeaderboard(period, mode) {
+  if (period) lbCurrentTab = period;
+  if (mode) lbCurrentMode = mode;
   const entries = loadLeaderboard();
-  const filtered = filterLeaderboardByPeriod(entries, period);
+  const filtered = filterLeaderboardEntries(entries, lbCurrentTab, lbCurrentMode);
 
-  // Update tabs
+  // Update mode tabs
+  document.querySelectorAll('.lb-mode-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.lbMode === lbCurrentMode);
+  });
+
+  // Update period tabs
   document.querySelectorAll('.lb-tab').forEach(tab => {
-    tab.classList.toggle('active', tab.dataset.lbTab === period);
+    tab.classList.toggle('active', tab.dataset.lbTab === lbCurrentTab);
   });
 
   const $body = document.getElementById('lb-body');
@@ -3098,18 +3135,16 @@ function renderLeaderboard(period) {
   }
 
   let html = '<table class="lb-table"><thead><tr>';
-  html += '<th>#</th><th>Score</th><th>Chain</th><th>Mode</th><th style="text-align:right">Date</th>';
+  html += '<th>#</th><th>Score</th><th>Chain</th><th style="text-align:right">Date</th>';
   html += '</tr></thead><tbody>';
 
   filtered.forEach((entry, i) => {
     const rank = i + 1;
     const rankClass = rank <= 3 ? ` lb-rank-${rank}` : '';
-    const modeLabel = entry.mode === 'classic' ? 'CLS' : 'SPR';
     html += `<tr>`;
     html += `<td class="lb-rank${rankClass}">${rank}</td>`;
     html += `<td class="lb-score-cell">${entry.score.toLocaleString()}</td>`;
     html += `<td class="lb-chain-cell">${entry.chain}</td>`;
-    html += `<td class="lb-mode-cell">${modeLabel}</td>`;
     html += `<td class="lb-date-cell">${formatLbDate(entry.date)}</td>`;
     html += `</tr>`;
   });
@@ -3119,7 +3154,9 @@ function renderLeaderboard(period) {
 }
 
 function showLeaderboard() {
-  renderLeaderboard(lbCurrentTab);
+  // Default to the currently active game mode
+  lbCurrentMode = gameMode === MODE_SPRINT ? 'sprint' : 'classic';
+  renderLeaderboard(lbCurrentTab, lbCurrentMode);
   document.getElementById('leaderboard').classList.add('visible');
 }
 
@@ -3278,7 +3315,10 @@ document.getElementById('btn-trophy').addEventListener('click', showLeaderboard)
 document.getElementById('btn-overlay-lb').addEventListener('click', showLeaderboard);
 document.getElementById('btn-lb-close').addEventListener('click', hideLeaderboard);
 document.querySelectorAll('.lb-tab').forEach(tab => {
-  tab.addEventListener('click', () => renderLeaderboard(tab.dataset.lbTab));
+  tab.addEventListener('click', () => renderLeaderboard(tab.dataset.lbTab, null));
+});
+document.querySelectorAll('.lb-mode-tab').forEach(tab => {
+  tab.addEventListener('click', () => renderLeaderboard(null, tab.dataset.lbMode));
 });
 
 // Handle resize (including mobile viewport changes like URL bar show/hide)
