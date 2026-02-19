@@ -25,8 +25,8 @@
     --surface-light: #2e2e3c;
     --text: #f0ede8;
     --text-dim: #6b6b78;
-    --accent: #D4AA60;
-    --accent-glow: rgba(212, 170, 96, 0.3);
+    --accent: #7EB8D0;
+    --accent-glow: rgba(126, 184, 208, 0.3);
   }
 
   html {
@@ -144,9 +144,10 @@
   }
 
   .score-block .value {
-    font-size: 17px;
+    font-size: 15px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 
   /* ── Info bar ── */
@@ -182,6 +183,19 @@
     min-width: 24px;
   }
 
+  .moves-display.sprint-timer .moves-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    text-shadow: 0 0 12px var(--accent-glow);
+  }
+
+  .moves-display.sprint-timer label {
+    font-size: 10px;
+    color: var(--accent);
+    opacity: 0.7;
+  }
+
   .chain-info {
     font-size: 16px;
     font-weight: 700;
@@ -212,23 +226,24 @@
 
   .time-bonus {
     position: absolute;
-    right: 8px;
-    top: -2px;
-    font-size: 14px;
-    font-weight: 700;
+    left: 0;
+    top: -8px;
+    font-size: 20px;
+    font-weight: 800;
     color: #5BF080;
-    text-shadow: 0 0 8px rgba(91,240,128,0.5);
+    text-shadow: 0 0 12px rgba(91,240,128,0.6);
     opacity: 0;
     pointer-events: none;
   }
 
   .time-bonus.show {
-    animation: timeBonusPop 1s ease forwards;
+    animation: timeBonusPop 1.5s ease forwards;
   }
 
   @keyframes timeBonusPop {
     0% { opacity: 0; transform: translateY(0) scale(0.8); }
-    20% { opacity: 1; transform: translateY(-4px) scale(1.2); }
+    15% { opacity: 1; transform: translateY(-6px) scale(1.3); }
+    50% { opacity: 1; transform: translateY(-12px) scale(1.1); }
     100% { opacity: 0; transform: translateY(-20px) scale(1); }
   }
 
@@ -318,7 +333,7 @@
     font-size: 11px;
     font-weight: 700;
     color: var(--accent);
-    background: rgba(212,170,96,0.12);
+    background: rgba(126,184,208,0.12);
     border-radius: 4px;
     padding: 1px 5px;
     min-width: 16px;
@@ -367,8 +382,8 @@
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, var(--accent) 0%, #b8903a 100%);
-    color: var(--bg-dark);
+    background: linear-gradient(135deg, var(--accent) 0%, #5A9AB5 100%);
+    color: #fff;
     box-shadow: 0 2px 12px var(--accent-glow);
   }
 
@@ -439,10 +454,11 @@
   .final-score {
     font-size: 42px;
     font-weight: 800;
-    color: var(--accent);
+    color: #E8E8F0;
     margin-bottom: 16px;
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 20px var(--accent-glow);
+    letter-spacing: 3px;
+    text-shadow: 0 0 20px rgba(232, 232, 240, 0.3);
   }
 
   .stats {
@@ -536,13 +552,13 @@
     width: 30px;
     height: 30px;
     border-radius: 8px;
-    background: rgba(212,170,96,0.1);
+    background: rgba(126,184,208,0.1);
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--accent);
     font-weight: 700;
-    border: 1px solid rgba(212,170,96,0.15);
+    border: 1px solid rgba(126,184,208,0.15);
   }
 
   .tutorial .rule-text {
@@ -784,6 +800,71 @@
   .btn-trophy:active {
     opacity: 1;
   }
+
+  /* ── Stuck banner (persistent, above bottom bar) ── */
+  .stuck-banner {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-shrink: 0;
+    text-align: center;
+    padding: 12px 0 6px;
+    margin-bottom: 2px;
+  }
+
+  .stuck-banner.visible {
+    display: flex;
+    animation: stuckFadeIn 0.4s ease;
+  }
+
+  @keyframes stuckFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .stuck-banner-text {
+    font-size: 20px;
+    font-weight: 800;
+    color: #FF6B6B;
+    letter-spacing: 1px;
+    text-shadow: 0 0 12px rgba(255, 107, 107, 0.3);
+  }
+
+  .stuck-banner-hint {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+
+  /* ── New high score indicator ── */
+  .high-score-banner {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 4px 0;
+  }
+
+  .high-score-banner.visible {
+    display: flex;
+    animation: highScorePulse 1.5s ease infinite;
+  }
+
+  .high-score-banner-text {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #5BF080;
+    text-shadow: 0 0 8px rgba(91, 240, 128, 0.4);
+  }
+
+  @keyframes highScorePulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+  }
 </style>
 </head>
 <body>
@@ -807,6 +888,10 @@
     </div>
   </div>
 
+  <div class="high-score-banner" id="high-score-banner">
+    <span class="high-score-banner-text">&#9733; New High Score &#9733;</span>
+  </div>
+
   <div class="info-bar">
     <div class="moves-display" id="moves-display">
       <label id="moves-label">Moves</label>
@@ -823,10 +908,14 @@
     <canvas id="hexcanvas"></canvas>
   </div>
 
+  <div class="stuck-banner" id="stuck-banner">
+    <span class="stuck-banner-text">No more moves!</span>
+    <span class="stuck-banner-hint">Tap Shuffle to continue</span>
+  </div>
+
   <div class="bottom-bar">
     <button class="btn btn-primary" id="btn-classic">Classic</button>
     <button class="btn btn-secondary" id="btn-sprint">Sprint</button>
-    <button class="btn btn-secondary" id="btn-daily">Daily</button>
   </div>
 </div>
 
@@ -877,15 +966,15 @@
     </div>
     <div class="rule">
       <div class="rule-icon">&#10052;</div>
-      <div class="rule-text">Tiles that sit for <strong>too long</strong> will <strong>freeze</strong>. Clear adjacent same-color chains to <strong>thaw</strong> them!</div>
+      <div class="rule-text">In Classic, tiles that sit <strong>too long</strong> will <strong>freeze</strong>. A <strong>6-chain</strong> thaws &amp; resets all tiles of that color! A <strong>7-chain</strong> resets <strong>all</strong> tiles!</div>
     </div>
     <div class="rule">
       <div class="rule-icon">&#x21BB;</div>
       <div class="rule-text">Stuck? You get <strong>2 reshuffles</strong> per game. Use them wisely — when they're gone, a deadlock ends the game!</div>
     </div>
     <div class="rule">
-      <div class="rule-icon">&infin;</div>
-      <div class="rule-text"><strong>Classic:</strong> Unlimited, but tiles freeze over time. <strong>Sprint:</strong> 45 second timer — long chains add bonus time!</div>
+      <div class="rule-icon">&#x1F3C6;</div>
+      <div class="rule-text"><strong>Classic:</strong> Unlimited moves, but tiles freeze. <strong>Sprint:</strong> 45s timer — long chains (4+) earn bonus time! A <strong>4+ chain</strong> wipes all tiles of that color!</div>
     </div>
     <button class="btn btn-primary" id="btn-tutorial-close">GOT IT</button>
   </div>
@@ -944,8 +1033,8 @@ const TILE_COLORS = [
 ];
 
 const SCORE_TABLE = {
-  3: 300, 4: 800, 5: 1700, 6: 3000,
-  7: 5000, 8: 8000, 9: 13000, 10: 20000
+  3: 150, 4: 400, 5: 850, 6: 1500,
+  7: 2500, 8: 4000, 9: 6500, 10: 10000
 };
 
 // Chain tier feedback
@@ -1020,18 +1109,8 @@ function areAdjacent(a, b) {
   return AXIAL_DIRS.some(d => a.q + d.q === b.q && a.r + d.r === b.r);
 }
 
-function getGravityColumns(gridCells) {
-  const columns = {};
-  for (const cell of gridCells) {
-    const colKey = 2 * cell.q + cell.r;
-    if (!columns[colKey]) columns[colKey] = [];
-    columns[colKey].push({ q: cell.q, r: cell.r });
-  }
-  for (const key in columns) {
-    columns[key].sort((a, b) => a.r - b.r);
-  }
-  return columns;
-}
+// Pre-sort grid cells by r descending (bottom-first) for cascade gravity
+const gridCellsByRDesc = [...generateGridCells(HEX_GRID_RADIUS)].sort((a, b) => b.r - a.r || a.q - b.q);
 
 // ═══════════════════════════════════════════
 // SEEDED PRNG
@@ -1076,8 +1155,6 @@ function easeOutBounce(t) {
 // ═══════════════════════════════════════════
 const gridCells = generateGridCells(HEX_GRID_RADIUS);
 const gridSet = new Set(gridCells.map(c => hexKey(c.q, c.r)));
-const gravityColumns = getGravityColumns(gridCells);
-
 let board = new Map();
 let currentPath = [];
 let pathColor = -1;
@@ -1245,7 +1322,7 @@ function drawAmbientParticles() {
   for (const p of ambientParticles) {
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(212, 170, 96, ${p.alpha})`;
+    ctx.fillStyle = `rgba(126, 184, 208, ${p.alpha})`;
     ctx.fill();
   }
 }
@@ -1332,9 +1409,12 @@ function render(timestamp) {
     const anim = getAnimState(key, timestamp);
 
     ctx.save();
-    ctx.translate(px, py + 2);
+    // In-path tiles get a deeper, more prominent shadow for the "raised" look
+    const shadowDrop = anim.inPath ? 5 : 2;
+    const shadowAlpha = anim.inPath ? 0.5 : 0.3;
+    ctx.translate(px + anim.offsetX, py + shadowDrop);
     ctx.scale(anim.scale, anim.scale);
-    ctx.globalAlpha = anim.opacity * 0.3;
+    ctx.globalAlpha = anim.opacity * shadowAlpha;
     drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
     ctx.fillStyle = '#000';
     ctx.fill();
@@ -1351,50 +1431,58 @@ function render(timestamp) {
     const px = centerX + pixel.x;
     const py = centerY + pixel.y;
     const anim = getAnimState(key, timestamp);
-    const inPath = currentPath.some(c => c.q === cell.q && c.r === cell.r);
 
     ctx.save();
-    ctx.translate(px, py);
+    ctx.translate(px + anim.offsetX, py);
     ctx.scale(anim.scale, anim.scale);
     ctx.globalAlpha = anim.opacity;
 
     const tileColor = TILE_COLORS[tile.color];
 
-    // Gem gradient fill
+    // Outer glow for in-path tiles (drawn before the tile fill for a halo effect)
+    if (anim.inPath) {
+      ctx.save();
+      drawHexRounded(0, anim.offsetY, HEX_SIZE + 4, 5);
+      ctx.fillStyle = tileColor.light;
+      ctx.globalAlpha = 0.25;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Gem gradient fill — brighter if in path
     drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
     const grad = ctx.createRadialGradient(
       -HEX_SIZE * 0.2, anim.offsetY - HEX_SIZE * 0.2, 0,
       0, anim.offsetY, HEX_SIZE
     );
-    grad.addColorStop(0, tileColor.light);
-    grad.addColorStop(0.5, tileColor.base);
-    grad.addColorStop(1, tileColor.dark);
+    if (anim.inPath) {
+      // Brighter version for selected tiles
+      grad.addColorStop(0, '#fff');
+      grad.addColorStop(0.25, tileColor.light);
+      grad.addColorStop(0.6, tileColor.base);
+      grad.addColorStop(1, tileColor.light);
+    } else {
+      grad.addColorStop(0, tileColor.light);
+      grad.addColorStop(0.5, tileColor.base);
+      grad.addColorStop(1, tileColor.dark);
+    }
     ctx.fillStyle = grad;
     ctx.fill();
 
-    // Top highlight arc (gem sheen)
+    // Top highlight arc (gem sheen) — stronger on in-path tiles
     ctx.save();
     ctx.clip();
     ctx.beginPath();
     ctx.ellipse(-HEX_SIZE * 0.15, anim.offsetY - HEX_SIZE * 0.5, HEX_SIZE * 0.6, HEX_SIZE * 0.25, -0.3, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillStyle = anim.inPath ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)';
     ctx.fill();
     ctx.restore();
 
-    // Border
+    // Border — bright white for in-path, subtle for others
     drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
-    ctx.strokeStyle = inPath ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.08)';
-    ctx.lineWidth = inPath ? 2.5 : 1;
+    ctx.strokeStyle = anim.inPath ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = anim.inPath ? 2 : 1;
     ctx.stroke();
-
-    // Path highlight glow
-    if (inPath) {
-      drawHexRounded(0, anim.offsetY, HEX_SIZE + 2, 4);
-      ctx.strokeStyle = tileColor.light;
-      ctx.lineWidth = 3;
-      ctx.globalAlpha = 0.4;
-      ctx.stroke();
-    }
 
     // Sparkle twinkle: rare gem glint — each tile sparkles briefly every ~8 seconds
     if (tile.age < FREEZE_AGE) {
@@ -1421,62 +1509,65 @@ function render(timestamp) {
       }
     }
 
-    // Freeze warning stages
-    const movesLeft = FREEZE_AGE - tile.age;
-    if (movesLeft <= 3 && movesLeft > 0) {
-      // Graduated frost tint: stronger as freeze approaches
-      const intensity = movesLeft === 3 ? 0.06 : movesLeft === 2 ? 0.12 : 0.22;
-      drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
-      ctx.fillStyle = `rgba(160, 210, 255, ${intensity})`;
-      ctx.fill();
+    // Freeze warning stages (only in Classic mode)
+    if (gameMode !== MODE_SPRINT) {
+      const movesLeft = FREEZE_AGE - tile.age;
+      if (movesLeft <= 3 && movesLeft > 0) {
+        // Darken slightly — preserves tile color identity while showing danger
+        const dimAmount = movesLeft === 3 ? 0.08 : movesLeft === 2 ? 0.15 : 0.22;
+        drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
+        ctx.fillStyle = `rgba(20, 20, 30, ${dimAmount})`;
+        ctx.fill();
 
-      // Pulsing icy border for 1 move left
-      if (movesLeft === 1) {
-        const pulse = 0.4 + 0.3 * Math.sin(timestamp * 0.006);
-        drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
-        ctx.strokeStyle = `rgba(140, 200, 255, ${pulse})`;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      } else if (movesLeft === 2) {
-        drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
-        ctx.strokeStyle = 'rgba(140, 200, 255, 0.2)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+        // Colored border using tile's OWN color (lighter) so you can still tell what color it is
+        const borderAlpha = movesLeft === 1 ? (0.5 + 0.3 * Math.sin(timestamp * 0.006)) : movesLeft === 2 ? 0.3 : 0;
+        if (borderAlpha > 0) {
+          drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
+          ctx.strokeStyle = tileColor.light;
+          ctx.globalAlpha = borderAlpha;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.globalAlpha = anim.opacity;
+        }
+
+        // Countdown number in tile's own light color
+        ctx.save();
+        ctx.globalAlpha = movesLeft === 1 ? 0.9 : movesLeft === 2 ? 0.65 : 0.4;
+        ctx.font = `bold ${movesLeft === 1 ? 14 : 12}px Inter, system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = tileColor.light;
+        ctx.shadowColor = tileColor.base;
+        ctx.shadowBlur = movesLeft === 1 ? 6 : 3;
+        ctx.fillText(movesLeft, 0, anim.offsetY);
+        ctx.restore();
       }
 
-      // Countdown number showing moves until freeze
-      ctx.save();
-      ctx.globalAlpha = movesLeft === 1 ? 0.85 : movesLeft === 2 ? 0.6 : 0.4;
-      ctx.font = `bold ${movesLeft === 1 ? 14 : 12}px Inter, system-ui, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#B8DFFF';
-      ctx.shadowColor = 'rgba(100, 180, 255, 0.6)';
-      ctx.shadowBlur = movesLeft === 1 ? 6 : 3;
-      ctx.fillText(movesLeft, 0, anim.offsetY);
-      ctx.restore();
-    }
-
-    // Fully frozen overlay
-    if (tile.age >= FREEZE_AGE) {
-      // Desaturate: dark overlay to mute the color
-      drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
-      ctx.fillStyle = 'rgba(140, 180, 220, 0.45)';
-      ctx.fill();
-      // Thick ice border
-      drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
-      ctx.strokeStyle = 'rgba(180, 220, 255, 0.8)';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-      // Ice crystal / snowflake icon
-      ctx.globalAlpha = 0.7;
-      ctx.font = 'bold 13px Inter, system-ui, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = 'rgba(220, 240, 255, 0.9)';
-      ctx.shadowColor = 'rgba(180, 220, 255, 0.5)';
-      ctx.shadowBlur = 4;
-      ctx.fillText('\u2744', 0, anim.offsetY);
+      // Fully frozen overlay
+      if (tile.age >= FREEZE_AGE) {
+        // Darken + desaturate but keep a color tint visible
+        drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
+        ctx.fillStyle = 'rgba(20, 20, 35, 0.5)';
+        ctx.fill();
+        // Thin border in tile's color (dimmed) so you can still identify it
+        drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
+        ctx.strokeStyle = tileColor.light;
+        ctx.globalAlpha = 0.3;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.globalAlpha = anim.opacity;
+        // Snowflake icon
+        ctx.save();
+        ctx.globalAlpha = 0.6;
+        ctx.font = 'bold 13px Inter, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'rgba(200, 220, 240, 0.8)';
+        ctx.shadowColor = 'rgba(160, 200, 240, 0.4)';
+        ctx.shadowBlur = 3;
+        ctx.fillText('\u2744', 0, anim.offsetY);
+        ctx.restore();
+      }
     }
 
     ctx.restore();
@@ -1590,11 +1681,6 @@ function render(timestamp) {
     }
   }
 
-  // Path glow line
-  if (currentPath.length >= 2) {
-    drawPathLine(timestamp);
-  }
-
   // Chain length badge while dragging
   if (isDragging && currentPath.length >= MIN_CHAIN) {
     const last = currentPath[currentPath.length - 1];
@@ -1610,8 +1696,8 @@ function render(timestamp) {
     // Badge circle
     ctx.beginPath();
     ctx.arc(0, 0, 13, 0, Math.PI * 2);
-    ctx.fillStyle = '#D4AA60';
-    ctx.shadowColor = 'rgba(212,170,96,0.5)';
+    ctx.fillStyle = '#7EB8D0';
+    ctx.shadowColor = 'rgba(126,184,208,0.5)';
     ctx.shadowBlur = 10;
     ctx.fill();
     ctx.shadowBlur = 0;
@@ -1663,64 +1749,21 @@ function drawHoneycombBackdrop() {
   ctx.restore();
 }
 
-function drawPathLine(timestamp) {
-  if (currentPath.length < 2) return;
-  const tileColor = TILE_COLORS[pathColor];
-
-  // Build points
-  const points = currentPath.map(c => {
-    const pixel = axialToPixel(c.q, c.r, HEX_SIZE);
-    return { x: centerX + pixel.x, y: centerY + pixel.y };
-  });
-
-  // Outer glow
-  ctx.save();
-  ctx.strokeStyle = tileColor.base;
-  ctx.lineWidth = 10;
-  ctx.globalAlpha = 0.15;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.beginPath();
-  points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-  ctx.stroke();
-  ctx.restore();
-
-  // Mid line
-  ctx.save();
-  ctx.strokeStyle = tileColor.light;
-  ctx.lineWidth = 4;
-  ctx.globalAlpha = 0.5;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.beginPath();
-  points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-  ctx.stroke();
-  ctx.restore();
-
-  // Core line
-  ctx.save();
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth = 2;
-  ctx.globalAlpha = 0.7;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.beginPath();
-  points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-  ctx.stroke();
-  ctx.restore();
-}
+// Path line removed — replaced with raised tile effect (scale + lift + glow in getAnimState + tile rendering)
 
 // ═══════════════════════════════════════════
 // ANIMATION HELPERS
 // ═══════════════════════════════════════════
 function getAnimState(key, timestamp) {
-  let scale = 1, opacity = 1, offsetY = 0;
+  let scale = 1, opacity = 1, offsetX = 0, offsetY = 0;
 
   const settle = settleAnims.get(key);
   if (settle) {
     const t = Math.min(1, (timestamp - settle.startTime) / settle.duration);
     const eased = easeOutBounce(t);
-    offsetY = settle.startOffset * (1 - eased);
+    // Support both X and Y offsets for diagonal hex cascade
+    offsetX = (settle.startOffsetX || 0) * (1 - eased);
+    offsetY = (settle.startOffsetY || settle.startOffset || 0) * (1 - eased);
     if (t >= 1) settleAnims.delete(key);
   }
 
@@ -1732,12 +1775,15 @@ function getAnimState(key, timestamp) {
     if (t >= 1) appearAnims.delete(key);
   }
 
-  // Path highlight scale
+  // Path highlight: raised effect (scale up + lift)
+  let inPath = false;
   if (isDragging && currentPath.some(c => hexKey(c.q, c.r) === key)) {
-    scale *= 1.06;
+    inPath = true;
+    scale *= 1.08;
+    offsetY -= 4; // lift tile upward
   }
 
-  return { scale, opacity, offsetY };
+  return { scale, opacity, offsetX, offsetY, inPath };
 }
 
 // Sparkle particles
@@ -1760,7 +1806,7 @@ function spawnParticles(px, py, color, count) {
 
 // Gold confetti burst for new high scores
 function spawnConfetti() {
-  const colors = ['#D4AA60', '#F0D090', '#FFE4A0', '#C09030', '#fff'];
+  const colors = ['#7EB8D0', '#A0D4E8', '#C0E8F8', '#5A9AB5', '#fff'];
   for (let i = 0; i < 30; i++) {
     const angle = Math.random() * Math.PI * 2;
     const speed = 1.5 + Math.random() * 3;
@@ -1837,8 +1883,8 @@ function drawFloatTexts(timestamp) {
     ctx.font = `bold ${ft.fontSize}px Inter, system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = ft.fontSize >= 22 ? '#FF6B6B' : '#D4AA60';
-    ctx.shadowColor = ft.fontSize >= 22 ? 'rgba(255,107,107,0.6)' : 'rgba(212,170,96,0.5)';
+    ctx.fillStyle = ft.fontSize >= 22 ? '#FF6B6B' : '#7EB8D0';
+    ctx.shadowColor = ft.fontSize >= 22 ? 'rgba(255,107,107,0.6)' : 'rgba(126,184,208,0.5)';
     ctx.shadowBlur = ft.fontSize >= 22 ? 12 : 8;
     ctx.fillText(ft.text, 0, 0);
     ctx.restore();
@@ -1946,7 +1992,7 @@ function onPointerUp(e) {
 // ═══════════════════════════════════════════
 function calculateScore(length) {
   if (length <= 10) return SCORE_TABLE[length] || 0;
-  return Math.floor(20000 * Math.pow(1.6, length - 10));
+  return Math.floor(10000 * Math.pow(1.6, length - 10));
 }
 
 function triggerClassicGameOver() {
@@ -2008,7 +2054,12 @@ function executeChain(path) {
     scoreBlock.classList.add('score-shake');
   }
 
-  // New high score celebration!
+  // Show "new high score" banner whenever current score exceeds saved best
+  if (score > highScore) {
+    document.getElementById('high-score-banner').classList.add('visible');
+  }
+
+  // New high score celebration! (first time crossing the threshold)
   if (isNewHigh) {
     highScore = score;
     saveHighScore(highScore);
@@ -2017,6 +2068,11 @@ function executeChain(path) {
     void $highscore.offsetWidth;
     $highscore.classList.add('new-high-score');
     spawnConfetti();
+  } else if (score > highScore) {
+    // Keep updating best as score climbs
+    highScore = score;
+    saveHighScore(highScore);
+    $highscore.textContent = highScore;
   }
 
   // Chain tier feedback — always show for chains of 3+
@@ -2071,56 +2127,153 @@ function executeChain(path) {
       board.delete(hexKey(cell.q, cell.r));
     }
 
-    // Unfreeze mechanic: frozen tiles adjacent to cleared same-color tiles also get cleared (no points)
+    /* ====================================================================
+     * CHAIN REWARD TIERS (v3)
+     * 4+ chain: Color wipe (clear all remaining tiles of that color)
+     * 6+ chain: Color wipe + unfreeze & reset age→0 for all tiles of THAT color
+     * 7+ chain: Color wipe + unfreeze & reset age→0 for ALL tiles of ALL colors
+     * ==================================================================== */
     const chainColor = clearedColor;
-    const unfrozen = [];
-    const checkedForUnfreeze = new Set(path.map(c => hexKey(c.q, c.r)));
-    for (const cell of path) {
-      for (const d of AXIAL_DIRS) {
-        const nq = cell.q + d.q;
-        const nr = cell.r + d.r;
-        const nk = hexKey(nq, nr);
-        if (checkedForUnfreeze.has(nk)) continue;
-        checkedForUnfreeze.add(nk);
-        const neighbor = board.get(nk);
-        if (neighbor && neighbor.color === chainColor && neighbor.age >= FREEZE_AGE) {
-          unfrozen.push({ q: nq, r: nr });
-          // Add a thaw clear animation (ice-shatter style)
-          clearAnims.set(nk, {
-            startTime: performance.now(),
-            duration: 450,
-            tile: { ...neighbor },
-            isThaw: true,
+
+    // --- TIER 1: COLOR WIPE (4+ chain) ---
+    if (length >= 4) {
+      const wipeTiles = [];
+      for (const cell of gridCells) {
+        const key = hexKey(cell.q, cell.r);
+        const tile = board.get(key);
+        if (tile && tile.color === chainColor) {
+          const pixel = axialToPixel(cell.q, cell.r, HEX_SIZE);
+          const dist = Math.sqrt(pixel.x * pixel.x + pixel.y * pixel.y);
+          wipeTiles.push({ cell, key, tile: { ...tile }, dist, pixel });
+        }
+      }
+      wipeTiles.sort((a, b) => a.dist - b.dist);
+
+      if (wipeTiles.length > 0) {
+        const now2 = performance.now();
+
+        ripples.push({
+          cx: centerX, cy: centerY,
+          startTime: now2,
+          duration: 1200, // longer ripple to match slower wipe wave
+          color: chainColor,
+        });
+
+        wipeTiles.forEach((wt, i) => {
+          const delay = i * 100; // slower radial wave (was 50)
+          clearAnims.set(wt.key, {
+            startTime: now2 + delay,
+            duration: 700, // longer pop animation (was 450)
+            tile: wt.tile,
           });
-          board.delete(nk);
-          // Ice-shattering particles: mix of blue/white
-          const pixel = axialToPixel(nq, nr, HEX_SIZE);
-          const px = centerX + pixel.x;
-          const py = centerY + pixel.y;
-          for (let i = 0; i < 8; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = 0.8 + Math.random() * 2;
-            particles.push({
-              x: px, y: py,
-              vx: Math.cos(angle) * speed,
-              vy: Math.sin(angle) * speed - 0.5,
-              life: 1,
-              decay: 0.012 + Math.random() * 0.015,
-              r: 1.5 + Math.random() * 2,
-              color: Math.random() > 0.4 ? '#B8DFFF' : '#fff',
-            });
+          const wpx = centerX + wt.pixel.x;
+          const wpy = centerY + wt.pixel.y;
+          setTimeout(() => {
+            spawnParticles(wpx, wpy, chainColor, 8);
+          }, delay);
+          board.delete(wt.key);
+        });
+
+        const wipeBonus = wipeTiles.length * 50;
+        score += wipeBonus;
+        totalCleared += wipeTiles.length;
+        $score.textContent = score;
+
+        spawnFloatText(centerX, centerY - 20, 'COLOR WIPE!', 24);
+        spawnFloatText(centerX, centerY + 20, `+${wipeBonus}`, 20);
+
+        const scoreBlock = $score.closest('.score-block');
+        scoreBlock.classList.remove('score-shake');
+        void scoreBlock.offsetWidth;
+        scoreBlock.classList.add('score-shake');
+      }
+      requestRender();
+    }
+
+    // --- TIER 2 & 3: FREEZE RESET (Classic mode only) ---
+    if (gameMode !== MODE_SPRINT) {
+      if (length >= 7) {
+        // 7+ CHAIN: unfreeze & reset ALL tiles of ALL colors to age 0
+        let globalThawCount = 0;
+        for (const cell of gridCells) {
+          const key = hexKey(cell.q, cell.r);
+          const tile = board.get(key);
+          if (!tile) continue;
+          if (tile.age > 0) {
+            const wasFrozen = tile.age >= FREEZE_AGE;
+            tile.age = 0;
+            if (wasFrozen) {
+              globalThawCount++;
+              const pixel = axialToPixel(cell.q, cell.r, HEX_SIZE);
+              const px = centerX + pixel.x;
+              const py = centerY + pixel.y;
+              for (let i = 0; i < 4; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 0.5 + Math.random() * 1.2;
+                particles.push({
+                  x: px, y: py,
+                  vx: Math.cos(angle) * speed,
+                  vy: Math.sin(angle) * speed - 0.3,
+                  life: 1,
+                  decay: 0.02 + Math.random() * 0.02,
+                  r: 1 + Math.random() * 1.5,
+                  color: Math.random() > 0.5 ? '#B8DFFF' : '#fff',
+                });
+              }
+            }
           }
-          // Also spawn color particles so you see the tile color burst
-          spawnParticles(px, py, chainColor, 5);
+        }
+        spawnFloatText(centerX, centerY + 50, 'BOARD RESET!', 20);
+        if (globalThawCount > 0) {
+          showToastMessage(`Board thaw! ${globalThawCount} tiles unfrozen, all counters reset!`);
+        } else {
+          showToastMessage('All tile counters reset!');
+        }
+      } else if (length >= 6) {
+        // 6 CHAIN: unfreeze & reset all tiles of THAT color to age 0
+        let thawCount = 0;
+        let resetCount = 0;
+        for (const cell of gridCells) {
+          const key = hexKey(cell.q, cell.r);
+          const tile = board.get(key);
+          if (tile && tile.color === chainColor && tile.age > 0) {
+            const wasFrozen = tile.age >= FREEZE_AGE;
+            tile.age = 0;
+            if (wasFrozen) {
+              thawCount++;
+              const pixel = axialToPixel(cell.q, cell.r, HEX_SIZE);
+              const px = centerX + pixel.x;
+              const py = centerY + pixel.y;
+              for (let i = 0; i < 4; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 0.5 + Math.random() * 1.2;
+                particles.push({
+                  x: px, y: py,
+                  vx: Math.cos(angle) * speed,
+                  vy: Math.sin(angle) * speed - 0.3,
+                  life: 1,
+                  decay: 0.02 + Math.random() * 0.02,
+                  r: 1 + Math.random() * 1.5,
+                  color: Math.random() > 0.5 ? '#B8DFFF' : '#fff',
+                });
+              }
+            } else {
+              resetCount++;
+            }
+          }
+        }
+        if (thawCount > 0 && resetCount > 0) {
+          showToastMessage(`Thawed ${thawCount} & reset ${resetCount} tiles!`);
+        } else if (thawCount > 0) {
+          showToastMessage(thawCount === 1 ? 'Thawed a frozen tile!' : `Thawed ${thawCount} frozen tiles!`);
+        } else if (resetCount > 0) {
+          showToastMessage(`Reset ${resetCount} ${resetCount === 1 ? 'tile' : 'tiles'}!`);
         }
       }
     }
-    if (unfrozen.length > 0) {
-      showToastMessage(unfrozen.length === 1 ? 'Thawed a frozen tile!' : `Thawed ${unfrozen.length} frozen tiles!`);
-    }
 
     // Age all surviving tiles (before gravity/refill so new tiles start at 0)
-    ageTiles([...path, ...unfrozen]);
+    ageTiles(path);
 
     // Apply gravity
     applyGravity();
@@ -2146,6 +2299,7 @@ function executeChain(path) {
 }
 
 function ageTiles(clearedPath) {
+  if (gameMode === MODE_SPRINT) return; // no freezing in Sprint
   const clearedKeys = new Set(clearedPath.map(c => hexKey(c.q, c.r)));
   let newFreezes = 0;
   for (const cell of gridCells) {
@@ -2163,46 +2317,75 @@ function ageTiles(clearedPath) {
 }
 
 function applyGravity() {
+  // Hex cascade gravity: each empty cell pulls a tile from one of its two upper neighbors.
+  // For pointy-top hex with axial coords, "above" cell (q, r) means:
+  //   upper-left:  (q, r-1)
+  //   upper-right: (q+1, r-1)
+  // Iterate bottom-up repeatedly until no more tiles can fall.
   const now = performance.now();
+  const moveList = []; // { fromQ, fromR, toQ, toR, pass }
+  let pass = 0;
+  let changed = true;
 
-  for (const colKey in gravityColumns) {
-    const colCells = gravityColumns[colKey]; // sorted by r ascending (top to bottom)
+  while (changed && pass < 10) {
+    changed = false;
 
-    // Collect non-empty tiles
-    const tiles = [];
-    const oldPositions = [];
-    for (const cell of colCells) {
+    // Scan cells from bottom to top (highest r first)
+    for (const cell of gridCellsByRDesc) {
       const key = hexKey(cell.q, cell.r);
-      if (board.has(key)) {
-        tiles.push(board.get(key));
-        oldPositions.push({ q: cell.q, r: cell.r });
+      if (board.has(key)) continue; // cell occupied, skip
+
+      // This cell is empty — try to pull a tile from above
+      const ulQ = cell.q, ulR = cell.r - 1;       // upper-left
+      const urQ = cell.q + 1, urR = cell.r - 1;    // upper-right
+      const ulKey = hexKey(ulQ, ulR);
+      const urKey = hexKey(urQ, urR);
+
+      const hasUL = gridSet.has(ulKey) && board.has(ulKey);
+      const hasUR = gridSet.has(urKey) && board.has(urKey);
+
+      let sourceQ, sourceR;
+      if (hasUL && hasUR) {
+        // Both upper neighbors have tiles — pick randomly
+        if (Math.random() < 0.5) {
+          sourceQ = ulQ; sourceR = ulR;
+        } else {
+          sourceQ = urQ; sourceR = urR;
+        }
+      } else if (hasUL) {
+        sourceQ = ulQ; sourceR = ulR;
+      } else if (hasUR) {
+        sourceQ = urQ; sourceR = urR;
+      } else {
+        continue; // no tile above to pull
       }
-    }
 
-    // Clear all
-    for (const cell of colCells) {
-      board.delete(hexKey(cell.q, cell.r));
+      // Move tile from source to this empty cell
+      const tile = board.get(hexKey(sourceQ, sourceR));
+      board.delete(hexKey(sourceQ, sourceR));
+      board.set(key, tile);
+      moveList.push({ fromQ: sourceQ, fromR: sourceR, toQ: cell.q, toR: cell.r, pass });
+      changed = true;
     }
+    pass++;
+  }
 
-    // Place at bottom
-    const startIdx = colCells.length - tiles.length;
-    for (let i = 0; i < tiles.length; i++) {
-      const newCell = colCells[startIdx + i];
-      const oldCell = oldPositions[i];
-      board.set(hexKey(newCell.q, newCell.r), tiles[i]);
+  // Animate all moves with cascade stagger based on pass number
+  for (const move of moveList) {
+    const oldPixel = axialToPixel(move.fromQ, move.fromR, HEX_SIZE);
+    const newPixel = axialToPixel(move.toQ, move.toR, HEX_SIZE);
+    const destKey = hexKey(move.toQ, move.toR);
 
-      // Animate settling if position changed
-      if (newCell.q !== oldCell.q || newCell.r !== oldCell.r) {
-        const oldPixel = axialToPixel(oldCell.q, oldCell.r, HEX_SIZE);
-        const newPixel = axialToPixel(newCell.q, newCell.r, HEX_SIZE);
-        const offsetY = oldPixel.y - newPixel.y;
-        settleAnims.set(hexKey(newCell.q, newCell.r), {
-          startTime: now,
-          duration: 300,
-          startOffset: offsetY,
-        });
-      }
-    }
+    // If this tile already has a settle anim (moved multiple times across passes),
+    // chain from its previous origin for a smooth cascade
+    const existing = settleAnims.get(destKey);
+
+    settleAnims.set(destKey, {
+      startTime: now + move.pass * 70, // 70ms stagger per cascade pass
+      duration: 320,
+      startOffsetX: (existing ? existing.startOffsetX : 0) + (oldPixel.x - newPixel.x),
+      startOffsetY: (existing ? existing.startOffsetY : 0) + (oldPixel.y - newPixel.y),
+    });
   }
   requestRender();
 }
@@ -2310,8 +2493,16 @@ function reshuffleBoard() {
 // ═══════════════════════════════════════════
 // GAME OVER
 // ═══════════════════════════════════════════
+const GAME_OVER_PHRASES = [
+  'HEXED!',
+  'HEX-AGAIN?',
+  'SIX SIDES, ONE MORE TRY',
+  'TOTAL HEX-LAPSE',
+];
+
 function showGameOver() {
-  document.querySelector('#overlay h2').textContent = 'GAME OVER';
+  const phrase = GAME_OVER_PHRASES[Math.floor(Math.random() * GAME_OVER_PHRASES.length)];
+  document.querySelector('#overlay h2').textContent = phrase;
   document.getElementById('final-score').textContent = score;
   document.getElementById('stat-cleared').textContent = totalCleared;
   document.getElementById('stat-chain').textContent = bestChain;
@@ -2320,16 +2511,11 @@ function showGameOver() {
   $overlay.classList.add('visible');
 
   // Record score to leaderboard
-  const mode = isDaily ? 'daily' : gameMode;
-  addLeaderboardEntry(score, bestChain, mode, totalCleared, movesMade);
+  addLeaderboardEntry(score, bestChain, gameMode, totalCleared, movesMade);
 }
 
 function generateShareText() {
-  let mode;
-  if (isDaily) mode = `Daily #${getDailySeed() % 10000}`;
-  else if (gameMode === MODE_CLASSIC) mode = 'Classic';
-  else mode = 'Sprint';
-
+  const mode = gameMode === MODE_CLASSIC ? 'Classic' : 'Sprint';
   let text = `HEX CHAIN ${mode}\n`;
   text += `Score: ${score}\n`;
   text += `Best chain: ${bestChain} | Cleared: ${totalCleared}\n`;
@@ -2342,13 +2528,13 @@ function generateShareText() {
 // LOCALSTORAGE
 // ═══════════════════════════════════════════
 function loadHighScore() {
-  const key = isDaily ? 'hexchain-hs-daily' : `hexchain-hs-${gameMode}`;
+  const key = `hexchain-hs-${gameMode}`;
   try { return parseInt(localStorage.getItem(key) || '0', 10); }
   catch { return 0; }
 }
 
 function saveHighScore(val) {
-  const key = isDaily ? 'hexchain-hs-daily' : `hexchain-hs-${gameMode}`;
+  const key = `hexchain-hs-${gameMode}`;
   try { localStorage.setItem(key, String(val)); }
   catch {}
 }
@@ -2420,7 +2606,7 @@ function showTimeBonus(bonus) {
   $bonus.classList.remove('show');
   void $bonus.offsetWidth;
   $bonus.classList.add('show');
-  setTimeout(() => $bonus.classList.remove('show'), 1000);
+  setTimeout(() => $bonus.classList.remove('show'), 1500);
 }
 
 // ═══════════════════════════════════════════
@@ -2517,7 +2703,7 @@ function renderLeaderboard(period) {
   filtered.forEach((entry, i) => {
     const rank = i + 1;
     const rankClass = rank <= 3 ? ` lb-rank-${rank}` : '';
-    const modeLabel = entry.mode === 'classic' ? 'CLS' : entry.mode === 'sprint' ? 'SPR' : 'DLY';
+    const modeLabel = entry.mode === 'classic' ? 'CLS' : 'SPR';
     html += `<tr>`;
     html += `<td class="lb-rank${rankClass}">${rank}</td>`;
     html += `<td class="lb-score-cell">${entry.score.toLocaleString()}</td>`;
@@ -2543,10 +2729,10 @@ function hideLeaderboard() {
 // ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
-function initGame(mode = MODE_CLASSIC, daily = false) {
+function initGame(mode = MODE_CLASSIC) {
   gameMode = mode;
-  isDaily = daily;
-  rng = daily ? mulberry32(getDailySeed()) : Math.random;
+  isDaily = false;
+  rng = Math.random;
 
   // Set color count based on mode
   numColors = NUM_COLORS;
@@ -2591,23 +2777,27 @@ function initGame(mode = MODE_CLASSIC, daily = false) {
 
   // Mode-specific UI
   const $movesLabel = document.getElementById('moves-label');
+  const $movesDisplay = document.getElementById('moves-display');
   if (mode === MODE_SPRINT) {
     $movesLabel.textContent = 'Time';
     $moves.textContent = SPRINT_TIME;
+    $movesDisplay.classList.add('sprint-timer');
   } else {
     $movesLabel.textContent = 'Chains';
     $moves.textContent = 0;
+    $movesDisplay.classList.remove('sprint-timer');
   }
 
   // Highlight active mode button
-  document.getElementById('btn-classic').className = `btn ${mode === MODE_CLASSIC && !daily ? 'btn-primary' : 'btn-secondary'}`;
-  document.getElementById('btn-sprint').className = `btn ${mode === MODE_SPRINT && !daily ? 'btn-primary' : 'btn-secondary'}`;
-  document.getElementById('btn-daily').className = `btn ${daily ? 'btn-primary' : 'btn-secondary'}`;
+  document.getElementById('btn-classic').className = `btn ${mode === MODE_CLASSIC ? 'btn-primary' : 'btn-secondary'}`;
+  document.getElementById('btn-sprint').className = `btn ${mode === MODE_SPRINT ? 'btn-primary' : 'btn-secondary'}`;
 
   // Reset reshuffle button
   updateReshuffleButton();
 
   $overlay.classList.remove('visible');
+  hideStuckBanner();
+  document.getElementById('high-score-banner').classList.remove('visible');
   requestRender();
 }
 
@@ -2622,12 +2812,17 @@ function updateReshuffleButton() {
 function signalNeedReshuffle() {
   const $btn = document.getElementById('btn-reshuffle');
   $btn.classList.add('pulse');
-  showToastMessage('No more moves! Shuffle the board');
+  document.getElementById('stuck-banner').classList.add('visible');
+}
+
+function hideStuckBanner() {
+  document.getElementById('stuck-banner').classList.remove('visible');
 }
 
 function doReshuffle() {
   if (reshufflesRemaining <= 0 || animating || gameOver) return;
   reshufflesRemaining--;
+  hideStuckBanner();
   reshuffleBoard();
   updateReshuffleButton();
 }
@@ -2637,10 +2832,9 @@ function doReshuffle() {
 // ═══════════════════════════════════════════
 document.getElementById('btn-classic').addEventListener('click', () => initGame(MODE_CLASSIC));
 document.getElementById('btn-sprint').addEventListener('click', () => initGame(MODE_SPRINT));
-document.getElementById('btn-daily').addEventListener('click', () => initGame(MODE_SPRINT, true));
 document.getElementById('btn-replay').addEventListener('click', () => {
   $overlay.classList.remove('visible');
-  initGame(gameMode, isDaily);
+  initGame(gameMode);
 });
 document.getElementById('btn-share').addEventListener('click', () => {
   const text = generateShareText();
