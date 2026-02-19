@@ -1,0 +1,2721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<title>Hex Chain</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  @viewport { width: device-width; zoom: 1; }
+  @-ms-viewport { width: device-width; zoom: 1; }
+
+  /* Prevent Chrome iOS from zooming on button focus */
+  button, input, select, textarea {
+    font-size: 16px;
+    touch-action: manipulation;
+  }
+
+  :root {
+    --bg-dark: #141419;
+    --bg-mid: #1a1a24;
+    --surface: #22222e;
+    --surface-light: #2e2e3c;
+    --text: #f0ede8;
+    --text-dim: #6b6b78;
+    --accent: #D4AA60;
+    --accent-glow: rgba(212, 170, 96, 0.3);
+  }
+
+  html {
+    touch-action: manipulation;
+    -ms-touch-action: manipulation;
+    overflow: hidden;
+    height: 100%;
+    height: 100dvh;
+  }
+
+  html, body {
+    height: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    background: var(--bg-dark);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(ellipse at 50% 40%, var(--bg-mid) 0%, var(--bg-dark) 70%);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  #game {
+    width: 100%;
+    max-width: 400px;
+    height: 100%;
+    max-height: 750px;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 12px;
+    gap: 6px;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .title {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-shadow: 0 0 20px var(--accent-glow);
+    white-space: nowrap;
+  }
+
+  .btn-help {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid var(--text-dim);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .btn-help:active {
+    border-color: var(--text);
+    color: var(--text);
+  }
+
+  .scores {
+    display: flex;
+    gap: 6px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .score-block {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 4px 8px;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .score-block label {
+    display: block;
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+
+  .score-block .value {
+    font-size: 17px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Info bar ── */
+  .info-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    height: 36px;
+    padding: 0 4px;
+  }
+
+  .moves-display {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+  }
+
+  .moves-display label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+
+  .moves-display .moves-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    min-width: 24px;
+  }
+
+  .chain-info {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    text-shadow: 0 0 12px var(--accent-glow);
+    text-align: right;
+    line-height: 1.2;
+  }
+
+  .chain-info.active {
+    opacity: 1;
+    animation: chainPulse 0.5s ease;
+  }
+
+  .chain-info .chain-label {
+    display: block;
+    font-size: 13px;
+    letter-spacing: 1px;
+    opacity: 0.7;
+  }
+
+  .moves-value.timer-low {
+    color: #FF6B6B;
+    animation: timerPulse 0.5s ease infinite;
+  }
+
+  .time-bonus {
+    position: absolute;
+    right: 8px;
+    top: -2px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #5BF080;
+    text-shadow: 0 0 8px rgba(91,240,128,0.5);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .time-bonus.show {
+    animation: timeBonusPop 1s ease forwards;
+  }
+
+  @keyframes timeBonusPop {
+    0% { opacity: 0; transform: translateY(0) scale(0.8); }
+    20% { opacity: 1; transform: translateY(-4px) scale(1.2); }
+    100% { opacity: 0; transform: translateY(-20px) scale(1); }
+  }
+
+  @keyframes timerPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .chain-info.tier-epic {
+    font-size: 20px;
+    color: #FF6B6B;
+    text-shadow: 0 0 16px rgba(255,107,107,0.4);
+    animation: chainPulse 0.5s ease;
+  }
+
+  .chain-info.tier-legendary {
+    font-size: 24px;
+    color: #FF4ECD;
+    text-shadow: 0 0 20px rgba(255,78,205,0.5);
+    animation: chainPulse 0.6s ease;
+  }
+
+  @keyframes screenShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-3px); }
+    40% { transform: translateX(3px); }
+    60% { transform: translateX(-2px); }
+    80% { transform: translateX(2px); }
+  }
+
+  /* ── Reshuffle button ── */
+  .btn-reshuffle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--surface);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 6px 12px;
+    color: var(--text-dim);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.15s, border-color 0.3s, color 0.3s, box-shadow 0.3s;
+    flex-shrink: 0;
+  }
+
+  .btn-reshuffle:active {
+    transform: scale(0.95);
+    border-color: var(--accent);
+  }
+
+  .btn-reshuffle:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .btn-reshuffle:disabled:active {
+    transform: none;
+  }
+
+  .btn-reshuffle.pulse {
+    border-color: var(--accent);
+    color: var(--accent);
+    animation: reshufflePulse 1.2s ease infinite;
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+
+  @keyframes reshufflePulse {
+    0%, 100% { box-shadow: 0 0 8px var(--accent-glow); transform: scale(1); }
+    50% { box-shadow: 0 0 18px var(--accent-glow); transform: scale(1.05); }
+  }
+
+  .reshuffle-icon {
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .reshuffle-label {
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .reshuffle-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(212,170,96,0.12);
+    border-radius: 4px;
+    padding: 1px 5px;
+    min-width: 16px;
+    text-align: center;
+  }
+
+  /* ── Canvas ── */
+  .canvas-container {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  #hexcanvas {
+    display: block;
+    touch-action: none;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  /* ── Bottom bar ── */
+  .bottom-bar {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .btn {
+    flex: 1;
+    height: 44px;
+    border: none;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.1s ease, opacity 0.15s ease;
+  }
+
+  .btn:active {
+    transform: scale(0.97);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent) 0%, #b8903a 100%);
+    color: var(--bg-dark);
+    box-shadow: 0 2px 12px var(--accent-glow);
+  }
+
+  .btn-secondary {
+    background: var(--surface-light);
+    color: var(--text-dim);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* ── Overlay ── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,10,15,0);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.8s ease, background 0.8s ease, backdrop-filter 0.8s ease, -webkit-backdrop-filter 0.8s ease;
+  }
+
+  .overlay.visible {
+    opacity: 1;
+    background: rgba(10,10,15,0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    pointer-events: auto;
+  }
+
+  .overlay-content {
+    background: linear-gradient(180deg, var(--surface) 0%, #1e1e2a 100%);
+    border-radius: 20px;
+    padding: 28px 24px;
+    width: 90%;
+    max-width: 320px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    transform: translateY(20px) scale(0.95);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .overlay.visible .overlay-content {
+    transform: translateY(0) scale(1);
+  }
+
+  .overlay-content h2 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+    color: var(--accent);
+    text-shadow: 0 0 16px var(--accent-glow);
+  }
+
+  .final-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .final-score {
+    font-size: 42px;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 16px;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .stats {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+
+  .stat {
+    flex: 1;
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    padding: 8px 4px;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .stat label {
+    display: block;
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .stat .value {
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  .share-preview {
+    font-family: monospace;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    white-space: pre;
+    text-align: center;
+  }
+
+  .overlay-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  /* ── Tutorial ── */
+  .tutorial {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,10,15,0.85);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .tutorial.visible { display: flex; }
+
+  .tutorial-content {
+    background: linear-gradient(180deg, var(--surface) 0%, #1e1e2a 100%);
+    border-radius: 20px;
+    padding: 28px 24px;
+    width: 90%;
+    max-width: 340px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .tutorial-content h2 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+    color: var(--accent);
+  }
+
+  .tutorial .rule {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    text-align: left;
+    margin-bottom: 14px;
+  }
+
+  .tutorial .rule-icon {
+    font-size: 13px;
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: rgba(212,170,96,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-weight: 700;
+    border: 1px solid rgba(212,170,96,0.15);
+  }
+
+  .tutorial .rule-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-dim);
+    padding-top: 4px;
+  }
+
+  .tutorial .rule-text strong {
+    color: var(--text);
+  }
+
+  .tutorial .btn {
+    margin-top: 18px;
+    width: 100%;
+  }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface-light);
+    color: var(--text);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 300;
+    pointer-events: none;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+
+  .toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ── Animations ── */
+  @keyframes chainPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes scorePop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.12); color: var(--accent); }
+    100% { transform: scale(1); }
+  }
+
+  .score-pop { animation: scorePop 0.3s ease; }
+
+  @keyframes scoreShake {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    15% { transform: translateX(-3px) rotate(-1deg); }
+    30% { transform: translateX(3px) rotate(1deg); }
+    45% { transform: translateX(-2px) rotate(-0.5deg); }
+    60% { transform: translateX(2px) rotate(0.5deg); }
+    75% { transform: translateX(-1px); }
+  }
+
+  .score-shake { animation: scoreShake 0.4s ease; }
+
+  @keyframes newHighScore {
+    0% { transform: scale(1); text-shadow: none; }
+    30% { transform: scale(1.2); text-shadow: 0 0 12px var(--accent-glow); }
+    100% { transform: scale(1); text-shadow: none; }
+  }
+
+  .new-high-score { animation: newHighScore 0.6s ease; }
+
+  /* ── Leaderboard ── */
+  .leaderboard {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,10,15,0.85);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 150;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .leaderboard.visible { display: flex; }
+
+  .leaderboard-content {
+    background: linear-gradient(180deg, var(--surface) 0%, #1e1e2a 100%);
+    border-radius: 20px;
+    padding: 24px 20px;
+    width: 90%;
+    max-width: 340px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .leaderboard-content h2 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+    color: var(--accent);
+    text-shadow: 0 0 16px var(--accent-glow);
+  }
+
+  .lb-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    padding: 3px;
+  }
+
+  .lb-tab {
+    flex: 1;
+    padding: 7px 4px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .lb-tab.active {
+    background: var(--surface-light);
+    color: var(--text);
+  }
+
+  .lb-tab:active {
+    transform: scale(0.97);
+  }
+
+  .lb-table {
+    width: 100%;
+    text-align: left;
+    border-collapse: collapse;
+  }
+
+  .lb-table th {
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+    font-weight: 500;
+    padding: 0 4px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .lb-table td {
+    padding: 8px 4px;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .lb-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .lb-rank {
+    font-weight: 700;
+    color: var(--text-dim);
+    width: 28px;
+    text-align: center;
+  }
+
+  .lb-rank-1 { color: #FFD700; }
+  .lb-rank-2 { color: #C0C0C0; }
+  .lb-rank-3 { color: #CD7F32; }
+
+  .lb-score-cell {
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .lb-chain-cell {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .lb-mode-cell {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+  }
+
+  .lb-date-cell {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: right;
+  }
+
+  .lb-empty {
+    padding: 32px 0;
+    color: var(--text-dim);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  .lb-close {
+    margin-top: 16px;
+    width: 100%;
+  }
+
+  .btn-trophy {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+    padding: 0;
+    opacity: 0.6;
+    transition: opacity 0.15s;
+  }
+
+  .btn-trophy:active {
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+
+<div id="game">
+  <div class="header">
+    <div class="header-left">
+      <div class="title">HEX CHAIN</div>
+      <button class="btn-trophy" id="btn-trophy" aria-label="Leaderboard">&#127942;</button>
+      <button class="btn-help" id="btn-help" aria-label="How to play">?</button>
+    </div>
+    <div class="scores">
+      <div class="score-block">
+        <label>Score</label>
+        <div class="value" id="score">0</div>
+      </div>
+      <div class="score-block">
+        <label>Best</label>
+        <div class="value" id="highscore">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-bar">
+    <div class="moves-display" id="moves-display">
+      <label id="moves-label">Moves</label>
+      <div class="moves-value" id="moves">45</div>
+      <div class="time-bonus" id="time-bonus"></div>
+    </div>
+    <div class="chain-info" id="chain-info"></div>
+    <button class="btn-reshuffle" id="btn-reshuffle" aria-label="Reshuffle board">
+      <span class="reshuffle-icon">&#x21BB;</span><span class="reshuffle-label">Shuffle</span><span class="reshuffle-count" id="reshuffle-count">2</span>
+    </button>
+  </div>
+
+  <div class="canvas-container" id="canvas-container">
+    <canvas id="hexcanvas"></canvas>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="btn btn-primary" id="btn-classic">Classic</button>
+    <button class="btn btn-secondary" id="btn-sprint">Sprint</button>
+    <button class="btn btn-secondary" id="btn-daily">Daily</button>
+  </div>
+</div>
+
+<!-- Game Over -->
+<div class="overlay" id="overlay">
+  <div class="overlay-content">
+    <h2>GAME OVER</h2>
+    <div class="final-label">Final Score</div>
+    <div class="final-score" id="final-score">0</div>
+    <div class="stats">
+      <div class="stat">
+        <label>Cleared</label>
+        <div class="value" id="stat-cleared">0</div>
+      </div>
+      <div class="stat">
+        <label>Best Chain</label>
+        <div class="value" id="stat-chain">0</div>
+      </div>
+      <div class="stat">
+        <label>Moves</label>
+        <div class="value" id="stat-moves">0</div>
+      </div>
+    </div>
+    <div class="share-preview" id="share-preview"></div>
+    <div class="overlay-buttons">
+      <button class="btn btn-primary" id="btn-replay">Play Again</button>
+      <button class="btn btn-secondary" id="btn-share">Share</button>
+      <button class="btn btn-secondary" id="btn-overlay-lb" style="flex:0 0 44px;font-size:16px">&#127942;</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tutorial -->
+<div class="tutorial" id="tutorial">
+  <div class="tutorial-content">
+    <h2>HOW TO PLAY</h2>
+    <div class="rule">
+      <div class="rule-icon">&mdash;</div>
+      <div class="rule-text"><strong>Draw a path</strong> through adjacent tiles of the <strong>same color</strong> by touching and dragging.</div>
+    </div>
+    <div class="rule">
+      <div class="rule-icon">3+</div>
+      <div class="rule-text">Chains of <strong>3 or more</strong> clear and score. Longer chains score <strong>way</strong> more: a 6-chain is worth 10x a 3-chain!</div>
+    </div>
+    <div class="rule">
+      <div class="rule-icon">&darr;</div>
+      <div class="rule-text">After clearing, tiles <strong>settle down</strong> and new tiles fill the gaps.</div>
+    </div>
+    <div class="rule">
+      <div class="rule-icon">&#10052;</div>
+      <div class="rule-text">Tiles that sit for <strong>too long</strong> will <strong>freeze</strong>. Clear adjacent same-color chains to <strong>thaw</strong> them!</div>
+    </div>
+    <div class="rule">
+      <div class="rule-icon">&#x21BB;</div>
+      <div class="rule-text">Stuck? You get <strong>2 reshuffles</strong> per game. Use them wisely — when they're gone, a deadlock ends the game!</div>
+    </div>
+    <div class="rule">
+      <div class="rule-icon">&infin;</div>
+      <div class="rule-text"><strong>Classic:</strong> Unlimited, but tiles freeze over time. <strong>Sprint:</strong> 45 second timer — long chains add bonus time!</div>
+    </div>
+    <button class="btn btn-primary" id="btn-tutorial-close">GOT IT</button>
+  </div>
+</div>
+
+<!-- Leaderboard -->
+<div class="leaderboard" id="leaderboard">
+  <div class="leaderboard-content">
+    <h2>LEADERBOARD</h2>
+    <div class="lb-tabs">
+      <button class="lb-tab active" data-lb-tab="today">Today</button>
+      <button class="lb-tab" data-lb-tab="month">Month</button>
+      <button class="lb-tab" data-lb-tab="alltime">All Time</button>
+    </div>
+    <div id="lb-body"></div>
+    <button class="btn btn-secondary lb-close" id="btn-lb-close">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied to clipboard!</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════
+const HEX_GRID_RADIUS = 3;
+let HEX_SIZE = 28; // will be recalculated by setupCanvas()
+const MIN_CHAIN = 3;
+const SQRT3 = Math.sqrt(3);
+
+// Sprint timer
+const SPRINT_TIME = 45; // seconds
+const TIME_BONUSES = { 3: 0, 4: 2, 5: 4, 6: 7, 7: 10 }; // chain length -> bonus seconds
+function getTimeBonus(len) {
+  if (len >= 7) return TIME_BONUSES[7];
+  return TIME_BONUSES[len] || 0;
+}
+
+// Colors: 6 in all modes, no escalation
+const NUM_COLORS = 6;
+
+// Freeze mechanic: tiles freeze after this many moves without being cleared
+const FREEZE_AGE = 8;
+
+let numColors = NUM_COLORS;
+
+const TILE_COLORS = [
+  { base: '#5B8CB8', dark: '#3F6E95', light: '#7AAAD4' },  // Slate Blue
+  { base: '#5A9E7E', dark: '#3D7D5E', light: '#78BFA0' },  // Sage
+  { base: '#C8A855', dark: '#A68B3A', light: '#E0C472' },  // Ochre
+  { base: '#B85C5C', dark: '#943F3F', light: '#D47878' },  // Terracotta
+  { base: '#8B6BAA', dark: '#6D4F8C', light: '#A888C8' },  // Plum
+  { base: '#C47850', dark: '#A05C38', light: '#E09570' },  // Copper
+  { base: '#6AAA5A', dark: '#4E8842', light: '#88C878' },  // Fern
+  { base: '#A0A0A8', dark: '#787880', light: '#C0C0C8' },  // Pewter
+];
+
+const SCORE_TABLE = {
+  3: 300, 4: 800, 5: 1700, 6: 3000,
+  7: 5000, 8: 8000, 9: 13000, 10: 20000
+};
+
+// Chain tier feedback
+const CHAIN_TIERS = [
+  { min: 3, label: 'Nice!',       tier: '' },
+  { min: 4, label: 'Great!',      tier: '' },
+  { min: 5, label: 'Amazing!',    tier: '' },
+  { min: 6, label: 'Fantastic!',  tier: 'epic' },
+  { min: 7, label: 'INCREDIBLE!', tier: 'epic' },
+  { min: 8, label: 'LEGENDARY!',  tier: 'legendary' },
+  { min: 10, label: 'GODLIKE!!',  tier: 'legendary' },
+];
+
+function getChainTier(length) {
+  let result = CHAIN_TIERS[0];
+  for (const tier of CHAIN_TIERS) {
+    if (length >= tier.min) result = tier;
+  }
+  return result;
+}
+
+// Game modes
+const MODE_SPRINT = 'sprint';
+const MODE_CLASSIC = 'classic';
+let gameMode = MODE_CLASSIC;
+
+const AXIAL_DIRS = [
+  {q:1,r:0}, {q:1,r:-1}, {q:0,r:-1},
+  {q:-1,r:0}, {q:-1,r:1}, {q:0,r:1}
+];
+
+// ═══════════════════════════════════════════
+// HEX MATH
+// ═══════════════════════════════════════════
+function hexKey(q, r) { return `${q},${r}`; }
+
+function generateGridCells(radius) {
+  const cells = [];
+  for (let q = -radius; q <= radius; q++) {
+    const r1 = Math.max(-radius, -q - radius);
+    const r2 = Math.min(radius, -q + radius);
+    for (let r = r1; r <= r2; r++) {
+      cells.push({ q, r });
+    }
+  }
+  return cells;
+}
+
+function axialToPixel(q, r, size) {
+  return {
+    x: size * (SQRT3 * q + SQRT3 / 2 * r),
+    y: size * (1.5 * r)
+  };
+}
+
+function pixelToAxial(px, py, size) {
+  const q = (SQRT3 / 3 * px - 1 / 3 * py) / size;
+  const r = (2 / 3 * py) / size;
+  return axialRound(q, r);
+}
+
+function axialRound(qf, rf) {
+  const sf = -qf - rf;
+  let q = Math.round(qf), r = Math.round(rf), s = Math.round(sf);
+  const dq = Math.abs(q - qf), dr = Math.abs(r - rf), ds = Math.abs(s - sf);
+  if (dq > dr && dq > ds) q = -r - s;
+  else if (dr > ds) r = -q - s;
+  return { q, r };
+}
+
+function areAdjacent(a, b) {
+  return AXIAL_DIRS.some(d => a.q + d.q === b.q && a.r + d.r === b.r);
+}
+
+function getGravityColumns(gridCells) {
+  const columns = {};
+  for (const cell of gridCells) {
+    const colKey = 2 * cell.q + cell.r;
+    if (!columns[colKey]) columns[colKey] = [];
+    columns[colKey].push({ q: cell.q, r: cell.r });
+  }
+  for (const key in columns) {
+    columns[key].sort((a, b) => a.r - b.r);
+  }
+  return columns;
+}
+
+// ═══════════════════════════════════════════
+// SEEDED PRNG
+// ═══════════════════════════════════════════
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function getDailySeed() {
+  const d = new Date();
+  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}
+
+let rng = Math.random;
+
+// ═══════════════════════════════════════════
+// EASING
+// ═══════════════════════════════════════════
+function easeOutBack(t) {
+  const c1 = 1.70158, c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
+
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function easeOutBounce(t) {
+  if (t < 1/2.75) return 7.5625*t*t;
+  if (t < 2/2.75) { t -= 1.5/2.75; return 7.5625*t*t + 0.75; }
+  if (t < 2.5/2.75) { t -= 2.25/2.75; return 7.5625*t*t + 0.9375; }
+  t -= 2.625/2.75; return 7.5625*t*t + 0.984375;
+}
+
+// ═══════════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════════
+const gridCells = generateGridCells(HEX_GRID_RADIUS);
+const gridSet = new Set(gridCells.map(c => hexKey(c.q, c.r)));
+const gravityColumns = getGravityColumns(gridCells);
+
+let board = new Map();
+let currentPath = [];
+let pathColor = -1;
+let isDragging = false;
+let animating = false;
+
+let score = 0;
+let highScore = 0;
+let bestChain = 0;
+let totalCleared = 0;
+let gameOver = false;
+let isDaily = false;
+let movesMade = 0;
+let totalChains = 0;  // for Classic mode escalation
+const MAX_RESHUFFLES = 2;
+let reshufflesRemaining = MAX_RESHUFFLES;
+
+// Sprint timer state
+let sprintTimeLeft = SPRINT_TIME;
+let sprintTimerRunning = false;
+let lastTimerTick = 0;
+let timerInterval = null;
+
+// Animation registries
+const clearAnims = new Map();
+const settleAnims = new Map();
+const appearAnims = new Map();
+const particles = [];
+const floatTexts = [];
+
+// Ambient particles
+const ambientParticles = [];
+
+// Trail glow (afterglow on cleared path for long chains)
+const trailGlows = new Map(); // key -> { startTime, duration, color }
+
+// Sparkle tiles: random tiles get a brief twinkle
+let nextSparkleTime = 0;
+
+// Ripple effect for long chains
+const ripples = []; // { cx, cy, startTime, duration, color }
+
+// Chain info display timeout
+let chainInfoTimeout = null;
+
+// ═══════════════════════════════════════════
+// DOM REFS
+// ═══════════════════════════════════════════
+const $score = document.getElementById('score');
+const $highscore = document.getElementById('highscore');
+const $moves = document.getElementById('moves');
+const $chainInfo = document.getElementById('chain-info');
+const $overlay = document.getElementById('overlay');
+const $tutorial = document.getElementById('tutorial');
+const $toast = document.getElementById('toast');
+const $container = document.getElementById('canvas-container');
+const canvas = document.getElementById('hexcanvas');
+const ctx = canvas.getContext('2d');
+
+let canvasW = 0, canvasH = 0, centerX = 0, centerY = 0, dpr = 1;
+
+// ═══════════════════════════════════════════
+// CANVAS SETUP
+// ═══════════════════════════════════════════
+function setupCanvas() {
+  const rect = $container.getBoundingClientRect();
+  dpr = window.devicePixelRatio || 1;
+
+  const availW = rect.width || 350;
+  const availH = rect.height || 400;
+
+  // Dynamically calculate HEX_SIZE to fit within available space
+  const padding = 16;
+  const gridCols = 2 * HEX_GRID_RADIUS + 1; // 7
+  const gridRows = 2 * HEX_GRID_RADIUS;      // 6
+  const maxSizeByWidth = (availW - padding * 2) / (SQRT3 * gridCols);
+  const maxSizeByHeight = (availH - padding * 2) / (1.5 * gridRows + 2);
+  HEX_SIZE = Math.min(28, Math.floor(Math.min(maxSizeByWidth, maxSizeByHeight)));
+  HEX_SIZE = Math.max(16, HEX_SIZE); // minimum usable size
+
+  const gridPixelW = SQRT3 * HEX_SIZE * gridCols;
+  const gridPixelH = 1.5 * HEX_SIZE * gridRows + 2 * HEX_SIZE;
+
+  canvasW = Math.min(availW, gridPixelW + padding * 2);
+  canvasH = Math.min(availH, gridPixelH + padding * 2);
+
+  canvas.width = canvasW * dpr;
+  canvas.height = canvasH * dpr;
+  canvas.style.width = canvasW + 'px';
+  canvas.style.height = canvasH + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  centerX = canvasW / 2;
+  centerY = canvasH / 2;
+}
+
+// ═══════════════════════════════════════════
+// DRAWING UTILITIES
+// ═══════════════════════════════════════════
+function drawHexPath(cx, cy, size) {
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = Math.PI / 3 * i - Math.PI / 6;
+    const x = cx + (size - 1.5) * Math.cos(angle);
+    const y = cy + (size - 1.5) * Math.sin(angle);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+function drawHexRounded(cx, cy, size, cornerRadius) {
+  const corners = [];
+  for (let i = 0; i < 6; i++) {
+    const angle = Math.PI / 3 * i - Math.PI / 6;
+    corners.push({
+      x: cx + (size - 1.5) * Math.cos(angle),
+      y: cy + (size - 1.5) * Math.sin(angle)
+    });
+  }
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const curr = corners[i];
+    const next = corners[(i + 1) % 6];
+    if (i === 0) {
+      const prev = corners[5];
+      const mx = (prev.x + curr.x) / 2;
+      const my = (prev.y + curr.y) / 2;
+      ctx.moveTo(mx, my);
+    }
+    ctx.arcTo(curr.x, curr.y, next.x, next.y, cornerRadius);
+  }
+  ctx.closePath();
+}
+
+// ═══════════════════════════════════════════
+// AMBIENT PARTICLES
+// ═══════════════════════════════════════════
+function initAmbientParticles() {
+  ambientParticles.length = 0;
+  for (let i = 0; i < 15; i++) {
+    ambientParticles.push({
+      x: Math.random() * canvasW,
+      y: Math.random() * canvasH,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15,
+      r: Math.random() * 1.5 + 0.5,
+      alpha: Math.random() * 0.15 + 0.03,
+    });
+  }
+}
+
+function updateAmbientParticles() {
+  for (const p of ambientParticles) {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < 0) p.x = canvasW;
+    if (p.x > canvasW) p.x = 0;
+    if (p.y < 0) p.y = canvasH;
+    if (p.y > canvasH) p.y = 0;
+  }
+}
+
+function drawAmbientParticles() {
+  for (const p of ambientParticles) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(212, 170, 96, ${p.alpha})`;
+    ctx.fill();
+  }
+}
+
+// ═══════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════
+let needsRender = true;
+let rafId = null;
+let lastTimestamp = 0;
+
+function requestRender() {
+  needsRender = true;
+  if (!rafId) {
+    rafId = requestAnimationFrame(renderLoop);
+  }
+}
+
+function renderLoop(timestamp) {
+  rafId = null;
+  lastTimestamp = timestamp;
+
+  // Update animations
+  updateAmbientParticles();
+  updateParticles(timestamp);
+  updateFloatTexts(timestamp);
+
+  // Clean up expired trail glows
+  for (const [key, glow] of trailGlows) {
+    if (timestamp - glow.startTime >= glow.duration) trailGlows.delete(key);
+  }
+
+  // Clean up expired ripples
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    if (timestamp - ripples[i].startTime >= ripples[i].duration) ripples.splice(i, 1);
+  }
+
+  const stillAnimating = clearAnims.size > 0 || settleAnims.size > 0 ||
+    appearAnims.size > 0 || particles.length > 0 || floatTexts.length > 0 ||
+    trailGlows.size > 0 || ripples.length > 0;
+
+  render(timestamp);
+
+  if (stillAnimating || isDragging || sprintTimerRunning) {
+    rafId = requestAnimationFrame(renderLoop);
+  }
+}
+
+function render(timestamp) {
+  ctx.clearRect(0, 0, canvasW, canvasH);
+
+  // Ambient particles
+  drawAmbientParticles();
+
+  // Honeycomb backdrop
+  drawHoneycombBackdrop();
+
+  // Trail glows (afterglow on cleared cells for long chains)
+  for (const [key, glow] of trailGlows) {
+    const [gq, gr] = key.split(',').map(Number);
+    const pixel = axialToPixel(gq, gr, HEX_SIZE);
+    const gx = centerX + pixel.x;
+    const gy = centerY + pixel.y;
+    const t = (timestamp - glow.startTime) / glow.duration;
+    const alpha = (1 - t) * 0.25;
+    ctx.save();
+    drawHexRounded(gx, gy, HEX_SIZE, 4);
+    const tc = TILE_COLORS[glow.color];
+    ctx.fillStyle = tc.light;
+    ctx.globalAlpha = alpha;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Tile shadows
+  for (const cell of gridCells) {
+    const key = hexKey(cell.q, cell.r);
+    if (!board.has(key)) continue;
+    if (clearAnims.has(key)) continue;
+
+    const pixel = axialToPixel(cell.q, cell.r, HEX_SIZE);
+    const px = centerX + pixel.x;
+    const py = centerY + pixel.y;
+    const anim = getAnimState(key, timestamp);
+
+    ctx.save();
+    ctx.translate(px, py + 2);
+    ctx.scale(anim.scale, anim.scale);
+    ctx.globalAlpha = anim.opacity * 0.3;
+    drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
+    ctx.fillStyle = '#000';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Tiles
+  for (const cell of gridCells) {
+    const key = hexKey(cell.q, cell.r);
+    if (!board.has(key)) continue;
+
+    const tile = board.get(key);
+    const pixel = axialToPixel(cell.q, cell.r, HEX_SIZE);
+    const px = centerX + pixel.x;
+    const py = centerY + pixel.y;
+    const anim = getAnimState(key, timestamp);
+    const inPath = currentPath.some(c => c.q === cell.q && c.r === cell.r);
+
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.scale(anim.scale, anim.scale);
+    ctx.globalAlpha = anim.opacity;
+
+    const tileColor = TILE_COLORS[tile.color];
+
+    // Gem gradient fill
+    drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
+    const grad = ctx.createRadialGradient(
+      -HEX_SIZE * 0.2, anim.offsetY - HEX_SIZE * 0.2, 0,
+      0, anim.offsetY, HEX_SIZE
+    );
+    grad.addColorStop(0, tileColor.light);
+    grad.addColorStop(0.5, tileColor.base);
+    grad.addColorStop(1, tileColor.dark);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Top highlight arc (gem sheen)
+    ctx.save();
+    ctx.clip();
+    ctx.beginPath();
+    ctx.ellipse(-HEX_SIZE * 0.15, anim.offsetY - HEX_SIZE * 0.5, HEX_SIZE * 0.6, HEX_SIZE * 0.25, -0.3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fill();
+    ctx.restore();
+
+    // Border
+    drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
+    ctx.strokeStyle = inPath ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = inPath ? 2.5 : 1;
+    ctx.stroke();
+
+    // Path highlight glow
+    if (inPath) {
+      drawHexRounded(0, anim.offsetY, HEX_SIZE + 2, 4);
+      ctx.strokeStyle = tileColor.light;
+      ctx.lineWidth = 3;
+      ctx.globalAlpha = 0.4;
+      ctx.stroke();
+    }
+
+    // Sparkle twinkle: rare gem glint — each tile sparkles briefly every ~8 seconds
+    if (tile.age < FREEZE_AGE) {
+      const sparklePhase = ((cell.q * 7 + cell.r * 13 + tile.color * 31) % 97) / 97;
+      const sparkleT = ((timestamp * 0.000125 + sparklePhase) % 1);
+      if (sparkleT < 0.025) {
+        const sparkleAlpha = Math.sin(sparkleT / 0.025 * Math.PI) * 0.45;
+        ctx.save();
+        ctx.globalAlpha = sparkleAlpha;
+        ctx.beginPath();
+        const sx = -HEX_SIZE * 0.25 + sparklePhase * HEX_SIZE * 0.3;
+        const sy = anim.offsetY - HEX_SIZE * 0.35;
+        // 4-point star sparkle
+        ctx.moveTo(sx, sy - 4); ctx.lineTo(sx + 1.2, sy - 1.2);
+        ctx.lineTo(sx + 4, sy); ctx.lineTo(sx + 1.2, sy + 1.2);
+        ctx.lineTo(sx, sy + 4); ctx.lineTo(sx - 1.2, sy + 1.2);
+        ctx.lineTo(sx - 4, sy); ctx.lineTo(sx - 1.2, sy - 1.2);
+        ctx.closePath();
+        ctx.fillStyle = '#fff';
+        ctx.shadowColor = '#fff';
+        ctx.shadowBlur = 4;
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // Freeze warning stages
+    const movesLeft = FREEZE_AGE - tile.age;
+    if (movesLeft <= 3 && movesLeft > 0) {
+      // Graduated frost tint: stronger as freeze approaches
+      const intensity = movesLeft === 3 ? 0.06 : movesLeft === 2 ? 0.12 : 0.22;
+      drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
+      ctx.fillStyle = `rgba(160, 210, 255, ${intensity})`;
+      ctx.fill();
+
+      // Pulsing icy border for 1 move left
+      if (movesLeft === 1) {
+        const pulse = 0.4 + 0.3 * Math.sin(timestamp * 0.006);
+        drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
+        ctx.strokeStyle = `rgba(140, 200, 255, ${pulse})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else if (movesLeft === 2) {
+        drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
+        ctx.strokeStyle = 'rgba(140, 200, 255, 0.2)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      // Countdown number showing moves until freeze
+      ctx.save();
+      ctx.globalAlpha = movesLeft === 1 ? 0.85 : movesLeft === 2 ? 0.6 : 0.4;
+      ctx.font = `bold ${movesLeft === 1 ? 14 : 12}px Inter, system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#B8DFFF';
+      ctx.shadowColor = 'rgba(100, 180, 255, 0.6)';
+      ctx.shadowBlur = movesLeft === 1 ? 6 : 3;
+      ctx.fillText(movesLeft, 0, anim.offsetY);
+      ctx.restore();
+    }
+
+    // Fully frozen overlay
+    if (tile.age >= FREEZE_AGE) {
+      // Desaturate: dark overlay to mute the color
+      drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
+      ctx.fillStyle = 'rgba(140, 180, 220, 0.45)';
+      ctx.fill();
+      // Thick ice border
+      drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
+      ctx.strokeStyle = 'rgba(180, 220, 255, 0.8)';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      // Ice crystal / snowflake icon
+      ctx.globalAlpha = 0.7;
+      ctx.font = 'bold 13px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(220, 240, 255, 0.9)';
+      ctx.shadowColor = 'rgba(180, 220, 255, 0.5)';
+      ctx.shadowBlur = 4;
+      ctx.fillText('\u2744', 0, anim.offsetY);
+    }
+
+    ctx.restore();
+  }
+
+  // Clearing cells (rendered on top)
+  for (const [key, anim] of clearAnims) {
+    const [q, r] = key.split(',').map(Number);
+    const tile = anim.tile;
+    const pixel = axialToPixel(q, r, HEX_SIZE);
+    const px = centerX + pixel.x;
+    const py = centerY + pixel.y;
+
+    const t = Math.min(1, (timestamp - anim.startTime) / anim.duration);
+
+    if (t >= 1) {
+      clearAnims.delete(key);
+      continue;
+    }
+
+    const tileColor = TILE_COLORS[tile.color];
+
+    if (anim.isThaw) {
+      // Thaw animation: bright flash → crack → dissolve
+      let scale, opacity;
+      if (t < 0.15) {
+        // Brief bright flash
+        scale = 1 + 0.1 * (t / 0.15);
+        opacity = 1;
+      } else if (t < 0.4) {
+        // Hold with crack lines
+        scale = 1.1;
+        opacity = 1;
+      } else {
+        // Dissolve outward
+        const t2 = (t - 0.4) / 0.6;
+        scale = 1.1 + 0.3 * t2;
+        opacity = 1 - t2;
+      }
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.scale(scale, scale);
+      ctx.globalAlpha = opacity;
+      // Ice-blue base
+      drawHexRounded(0, 0, HEX_SIZE, 4);
+      ctx.fillStyle = `rgba(180, 220, 255, 0.6)`;
+      ctx.fill();
+      // Original tile color underneath
+      drawHexRounded(0, 0, HEX_SIZE, 4);
+      ctx.fillStyle = tileColor.base;
+      ctx.globalAlpha = opacity * 0.5;
+      ctx.fill();
+      // Bright white flash in early phase
+      if (t < 0.2) {
+        drawHexRounded(0, 0, HEX_SIZE, 4);
+        ctx.fillStyle = `rgba(255, 255, 255, ${(1 - t / 0.2) * 0.5})`;
+        ctx.fill();
+      }
+      // Crack lines during hold phase
+      if (t >= 0.15 && t < 0.5) {
+        ctx.globalAlpha = opacity * 0.7;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-3, -10); ctx.lineTo(2, 0); ctx.lineTo(-4, 8);
+        ctx.moveTo(5, -7); ctx.lineTo(1, 2); ctx.lineTo(6, 9);
+        ctx.stroke();
+      }
+      ctx.restore();
+    } else {
+      // Normal clear animation: scale up → bright → shrink + fade
+      let scale, opacity;
+      if (t < 0.2) {
+        // Quick bright pop
+        scale = 1 + 0.15 * easeOutCubic(t / 0.2);
+        opacity = 1;
+      } else if (t < 0.5) {
+        // Hold at bright
+        const t2 = (t - 0.2) / 0.3;
+        scale = 1.15 - 0.05 * t2;
+        opacity = 1;
+      } else {
+        // Gentle fade + slight shrink
+        const t2 = (t - 0.5) / 0.5;
+        const eased = easeOutCubic(t2);
+        scale = 1.1 * (1 - 0.3 * eased);
+        opacity = 1 - eased;
+      }
+
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.scale(scale, scale);
+      ctx.globalAlpha = opacity;
+
+      // Glow fill with tile color
+      drawHexRounded(0, 0, HEX_SIZE, 4);
+      const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, HEX_SIZE);
+      grad.addColorStop(0, '#fff');
+      grad.addColorStop(0.3, tileColor.light);
+      grad.addColorStop(1, tileColor.base);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Soft white border
+      drawHexRounded(0, 0, HEX_SIZE, 4);
+      ctx.strokeStyle = `rgba(255,255,255,${opacity * 0.6})`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+  }
+
+  // Path glow line
+  if (currentPath.length >= 2) {
+    drawPathLine(timestamp);
+  }
+
+  // Chain length badge while dragging
+  if (isDragging && currentPath.length >= MIN_CHAIN) {
+    const last = currentPath[currentPath.length - 1];
+    const pixel = axialToPixel(last.q, last.r, HEX_SIZE);
+    const bx = centerX + pixel.x + HEX_SIZE * 0.9;
+    const by = centerY + pixel.y - HEX_SIZE * 0.9;
+
+    ctx.save();
+    const pulseScale = 1 + 0.05 * Math.sin(timestamp * 0.008);
+    ctx.translate(bx, by);
+    ctx.scale(pulseScale, pulseScale);
+
+    // Badge circle
+    ctx.beginPath();
+    ctx.arc(0, 0, 13, 0, Math.PI * 2);
+    ctx.fillStyle = '#D4AA60';
+    ctx.shadowColor = 'rgba(212,170,96,0.5)';
+    ctx.shadowBlur = 10;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Badge text
+    ctx.fillStyle = '#141419';
+    ctx.font = 'bold 12px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(currentPath.length, 0, 0.5);
+    ctx.restore();
+  }
+
+  // Soft color bloom for long chains
+  for (const rip of ripples) {
+    const t = (timestamp - rip.startTime) / rip.duration;
+    if (t < 0 || t > 1) continue;
+    const alpha = Math.sin(t * Math.PI) * 0.1;
+    ctx.save();
+    const grad = ctx.createRadialGradient(rip.cx, rip.cy, 0, rip.cx, rip.cy, 100);
+    grad.addColorStop(0, TILE_COLORS[rip.color].light);
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.globalAlpha = alpha;
+    ctx.fillRect(rip.cx - 100, rip.cy - 100, 200, 200);
+    ctx.restore();
+  }
+
+  // Particles
+  drawParticles(timestamp);
+
+  // Float texts
+  drawFloatTexts(timestamp);
+}
+
+function drawHoneycombBackdrop() {
+  // Subtle breathing animation on the honeycomb
+  const breathe = 0.03 + 0.015 * Math.sin(lastTimestamp * 0.0008);
+  ctx.save();
+  ctx.strokeStyle = `rgba(255,255,255,${breathe})`;
+  ctx.lineWidth = 1;
+  for (const cell of gridCells) {
+    const pixel = axialToPixel(cell.q, cell.r, HEX_SIZE);
+    const px = centerX + pixel.x;
+    const py = centerY + pixel.y;
+    drawHexPath(px, py, HEX_SIZE);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawPathLine(timestamp) {
+  if (currentPath.length < 2) return;
+  const tileColor = TILE_COLORS[pathColor];
+
+  // Build points
+  const points = currentPath.map(c => {
+    const pixel = axialToPixel(c.q, c.r, HEX_SIZE);
+    return { x: centerX + pixel.x, y: centerY + pixel.y };
+  });
+
+  // Outer glow
+  ctx.save();
+  ctx.strokeStyle = tileColor.base;
+  ctx.lineWidth = 10;
+  ctx.globalAlpha = 0.15;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.stroke();
+  ctx.restore();
+
+  // Mid line
+  ctx.save();
+  ctx.strokeStyle = tileColor.light;
+  ctx.lineWidth = 4;
+  ctx.globalAlpha = 0.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.stroke();
+  ctx.restore();
+
+  // Core line
+  ctx.save();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.7;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.stroke();
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════
+// ANIMATION HELPERS
+// ═══════════════════════════════════════════
+function getAnimState(key, timestamp) {
+  let scale = 1, opacity = 1, offsetY = 0;
+
+  const settle = settleAnims.get(key);
+  if (settle) {
+    const t = Math.min(1, (timestamp - settle.startTime) / settle.duration);
+    const eased = easeOutBounce(t);
+    offsetY = settle.startOffset * (1 - eased);
+    if (t >= 1) settleAnims.delete(key);
+  }
+
+  const appear = appearAnims.get(key);
+  if (appear) {
+    const t = Math.min(1, (timestamp - appear.startTime) / appear.duration);
+    scale = easeOutBack(t);
+    opacity = t;
+    if (t >= 1) appearAnims.delete(key);
+  }
+
+  // Path highlight scale
+  if (isDragging && currentPath.some(c => hexKey(c.q, c.r) === key)) {
+    scale *= 1.06;
+  }
+
+  return { scale, opacity, offsetY };
+}
+
+// Sparkle particles
+function spawnParticles(px, py, color, count) {
+  const tc = TILE_COLORS[color];
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.5 + Math.random() * 2;
+    particles.push({
+      x: px, y: py,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 0.5,
+      life: 1,
+      decay: 0.015 + Math.random() * 0.02,
+      r: 1 + Math.random() * 2,
+      color: Math.random() > 0.5 ? tc.light : '#fff',
+    });
+  }
+}
+
+// Gold confetti burst for new high scores
+function spawnConfetti() {
+  const colors = ['#D4AA60', '#F0D090', '#FFE4A0', '#C09030', '#fff'];
+  for (let i = 0; i < 30; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1.5 + Math.random() * 3;
+    particles.push({
+      x: centerX,
+      y: centerY - 20,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 2,
+      life: 1,
+      decay: 0.008 + Math.random() * 0.008,
+      r: 1.5 + Math.random() * 2.5,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    });
+  }
+  requestRender();
+}
+
+function updateParticles(timestamp) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.03;
+    p.life -= p.decay;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+}
+
+function drawParticles(timestamp) {
+  for (const p of particles) {
+    ctx.save();
+    ctx.globalAlpha = p.life * 0.8;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 4;
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// Float score texts
+function spawnFloatText(px, py, text, fontSize = 16) {
+  floatTexts.push({
+    x: px, y: py,
+    text,
+    fontSize,
+    startTime: performance.now(),
+    duration: fontSize >= 22 ? 1800 : 1300,
+  });
+}
+
+function updateFloatTexts(timestamp) {
+  for (let i = floatTexts.length - 1; i >= 0; i--) {
+    const ft = floatTexts[i];
+    if (timestamp - ft.startTime >= ft.duration) {
+      floatTexts.splice(i, 1);
+    }
+  }
+}
+
+function drawFloatTexts(timestamp) {
+  for (const ft of floatTexts) {
+    const t = (timestamp - ft.startTime) / ft.duration;
+    const y = ft.y - 30 * t;
+    const alpha = 1 - t;
+    const scale = 1 + 0.2 * t;
+
+    ctx.save();
+    ctx.translate(ft.x, y);
+    ctx.scale(scale, scale);
+    ctx.globalAlpha = alpha;
+    ctx.font = `bold ${ft.fontSize}px Inter, system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = ft.fontSize >= 22 ? '#FF6B6B' : '#D4AA60';
+    ctx.shadowColor = ft.fontSize >= 22 ? 'rgba(255,107,107,0.6)' : 'rgba(212,170,96,0.5)';
+    ctx.shadowBlur = ft.fontSize >= 22 ? 12 : 8;
+    ctx.fillText(ft.text, 0, 0);
+    ctx.restore();
+  }
+}
+
+// ═══════════════════════════════════════════
+// TOUCH / POINTER INTERACTION
+// ═══════════════════════════════════════════
+canvas.addEventListener('pointerdown', onPointerDown);
+canvas.addEventListener('pointermove', onPointerMove);
+canvas.addEventListener('pointerup', onPointerUp);
+canvas.addEventListener('pointercancel', onPointerUp);
+
+function getHexFromEvent(e) {
+  const rect = canvas.getBoundingClientRect();
+  const px = e.clientX - rect.left;
+  const py = e.clientY - rect.top;
+  return pixelToAxial(px - centerX, py - centerY, HEX_SIZE);
+}
+
+function onPointerDown(e) {
+  if (gameOver || animating) return;
+  e.preventDefault();
+
+  // Check if board is stuck (e.g. too many frozen tiles)
+  if (!hasValidChains()) {
+    if (reshufflesRemaining <= 0) {
+      triggerClassicGameOver();
+    } else {
+      signalNeedReshuffle();
+    }
+    return;
+  }
+
+  const axial = getHexFromEvent(e);
+  const key = hexKey(axial.q, axial.r);
+
+  if (!gridSet.has(key) || !board.has(key)) return;
+  const startTile = board.get(key);
+  if (startTile.age >= FREEZE_AGE) return; // frozen tile
+
+  isDragging = true;
+  pathColor = startTile.color;
+  currentPath = [{ q: axial.q, r: axial.r }];
+
+  canvas.setPointerCapture(e.pointerId);
+  requestRender();
+}
+
+function onPointerMove(e) {
+  if (!isDragging) return;
+  e.preventDefault();
+
+  const axial = getHexFromEvent(e);
+  const key = hexKey(axial.q, axial.r);
+
+  if (!gridSet.has(key)) return;
+
+  const last = currentPath[currentPath.length - 1];
+
+  // Same cell
+  if (axial.q === last.q && axial.r === last.r) return;
+
+  // Backtrack
+  if (currentPath.length >= 2) {
+    const prev = currentPath[currentPath.length - 2];
+    if (axial.q === prev.q && axial.r === prev.r) {
+      currentPath.pop();
+      requestRender();
+      return;
+    }
+  }
+
+  // Must be adjacent
+  if (!areAdjacent(last, axial)) return;
+
+  // Must be same color and not frozen
+  const tile = board.get(key);
+  if (!tile || tile.color !== pathColor) return;
+  if (tile.age >= FREEZE_AGE) return;
+
+  // Must not already be in path
+  if (currentPath.some(c => c.q === axial.q && c.r === axial.r)) return;
+
+  currentPath.push({ q: axial.q, r: axial.r });
+  requestRender();
+}
+
+function onPointerUp(e) {
+  if (!isDragging) return;
+  isDragging = false;
+
+  if (currentPath.length >= MIN_CHAIN) {
+    executeChain(currentPath.slice());
+  }
+
+  currentPath = [];
+  pathColor = -1;
+  requestRender();
+}
+
+// ═══════════════════════════════════════════
+// GAME LOGIC
+// ═══════════════════════════════════════════
+function calculateScore(length) {
+  if (length <= 10) return SCORE_TABLE[length] || 0;
+  return Math.floor(20000 * Math.pow(1.6, length - 10));
+}
+
+function triggerClassicGameOver() {
+  if (gameOver) return;
+  gameOver = true;
+  stopSprintTimer();
+  if (score > highScore) {
+    highScore = score;
+    saveHighScore(highScore);
+    $highscore.textContent = highScore;
+  }
+  setTimeout(showGameOver, 800);
+  requestRender();
+}
+
+function executeChain(path) {
+  if (gameOver || animating) return;
+  animating = true;
+
+  const length = path.length;
+  const clearedColor = pathColor; // capture before onPointerUp resets it
+  const points = calculateScore(length);
+  score += points;
+  movesMade++;
+  totalCleared += length;
+  totalChains++;
+  const prevBest = bestChain;
+  if (length > bestChain) bestChain = length;
+
+  // Sprint: start timer on first chain, add time bonus for long chains
+  if (gameMode === MODE_SPRINT) {
+    if (!sprintTimerRunning) startSprintTimer();
+    const bonus = getTimeBonus(length);
+    if (bonus > 0) {
+      sprintTimeLeft += bonus;
+      showTimeBonus(bonus);
+    }
+  }
+
+
+
+  // Check for new high score BEFORE updating
+  const wasHighScore = score - points <= highScore;
+  const isNewHigh = score > highScore && wasHighScore;
+
+  // Update DOM
+  $score.textContent = score;
+  $score.classList.remove('score-pop');
+  void $score.offsetWidth;
+  $score.classList.add('score-pop');
+  if (gameMode === MODE_SPRINT) updateTimerDisplay();
+  else $moves.textContent = movesMade;
+
+  // Score shake on epic+ chains
+  if (length >= 6) {
+    const scoreBlock = $score.closest('.score-block');
+    scoreBlock.classList.remove('score-shake');
+    void scoreBlock.offsetWidth;
+    scoreBlock.classList.add('score-shake');
+  }
+
+  // New high score celebration!
+  if (isNewHigh) {
+    highScore = score;
+    saveHighScore(highScore);
+    $highscore.textContent = highScore;
+    $highscore.classList.remove('new-high-score');
+    void $highscore.offsetWidth;
+    $highscore.classList.add('new-high-score');
+    spawnConfetti();
+  }
+
+  // Chain tier feedback — always show for chains of 3+
+  const tier = getChainTier(length);
+  $chainInfo.className = 'chain-info active' + (tier.tier ? ` tier-${tier.tier}` : '');
+  const bonusText = (gameMode === MODE_SPRINT && getTimeBonus(length) > 0) ? ` \u00b7 +${getTimeBonus(length)}s` : '';
+  $chainInfo.innerHTML = `${tier.label}<span class="chain-label">${length} chain \u00b7 +${points}${bonusText}</span>`;
+  clearTimeout(chainInfoTimeout);
+  chainInfoTimeout = setTimeout(() => {
+    $chainInfo.className = 'chain-info';
+  }, length >= 8 ? 2500 : length >= 6 ? 2000 : length >= 4 ? 1600 : 1200);
+
+  // Save tiles before removal (for clear animation rendering)
+  const staggerDelay = 65;
+  const cellDuration = 450;
+  const now = performance.now();
+
+  path.forEach((cell, i) => {
+    const key = hexKey(cell.q, cell.r);
+    const tile = board.get(key);
+    clearAnims.set(key, {
+      startTime: now + i * staggerDelay,
+      duration: cellDuration,
+      tile: { ...tile },
+    });
+
+    // Spawn particles at each cell with stagger
+    setTimeout(() => {
+      const pixel = axialToPixel(cell.q, cell.r, HEX_SIZE);
+      spawnParticles(centerX + pixel.x, centerY + pixel.y, tile.color, 6);
+    }, i * staggerDelay + cellDuration * 0.3);
+  });
+
+  // Float score text at center of path — bigger for longer chains
+  const midCell = path[Math.floor(path.length / 2)];
+  const midPixel = axialToPixel(midCell.q, midCell.r, HEX_SIZE);
+  const fontSize = length >= 8 ? 28 : length >= 6 ? 22 : length >= 5 ? 18 : 16;
+  spawnFloatText(centerX + midPixel.x, centerY + midPixel.y, `+${points}`, fontSize);
+
+  // Chain record toast (only after first chain)
+  if (length > prevBest && prevBest > 0 && length >= 4) {
+    setTimeout(() => showToastMessage(`New best chain: ${length}!`), 400);
+  }
+
+  requestRender();
+
+  // After clear animation completes
+  const totalDuration = (path.length - 1) * staggerDelay + cellDuration + 50;
+  setTimeout(() => {
+    // Remove cleared cells from board
+    for (const cell of path) {
+      board.delete(hexKey(cell.q, cell.r));
+    }
+
+    // Unfreeze mechanic: frozen tiles adjacent to cleared same-color tiles also get cleared (no points)
+    const chainColor = clearedColor;
+    const unfrozen = [];
+    const checkedForUnfreeze = new Set(path.map(c => hexKey(c.q, c.r)));
+    for (const cell of path) {
+      for (const d of AXIAL_DIRS) {
+        const nq = cell.q + d.q;
+        const nr = cell.r + d.r;
+        const nk = hexKey(nq, nr);
+        if (checkedForUnfreeze.has(nk)) continue;
+        checkedForUnfreeze.add(nk);
+        const neighbor = board.get(nk);
+        if (neighbor && neighbor.color === chainColor && neighbor.age >= FREEZE_AGE) {
+          unfrozen.push({ q: nq, r: nr });
+          // Add a thaw clear animation (ice-shatter style)
+          clearAnims.set(nk, {
+            startTime: performance.now(),
+            duration: 450,
+            tile: { ...neighbor },
+            isThaw: true,
+          });
+          board.delete(nk);
+          // Ice-shattering particles: mix of blue/white
+          const pixel = axialToPixel(nq, nr, HEX_SIZE);
+          const px = centerX + pixel.x;
+          const py = centerY + pixel.y;
+          for (let i = 0; i < 8; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 0.8 + Math.random() * 2;
+            particles.push({
+              x: px, y: py,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed - 0.5,
+              life: 1,
+              decay: 0.012 + Math.random() * 0.015,
+              r: 1.5 + Math.random() * 2,
+              color: Math.random() > 0.4 ? '#B8DFFF' : '#fff',
+            });
+          }
+          // Also spawn color particles so you see the tile color burst
+          spawnParticles(px, py, chainColor, 5);
+        }
+      }
+    }
+    if (unfrozen.length > 0) {
+      showToastMessage(unfrozen.length === 1 ? 'Thawed a frozen tile!' : `Thawed ${unfrozen.length} frozen tiles!`);
+    }
+
+    // Age all surviving tiles (before gravity/refill so new tiles start at 0)
+    ageTiles([...path, ...unfrozen]);
+
+    // Apply gravity
+    applyGravity();
+
+    // Refill
+    refillBoard();
+
+    // Check deadlock — if stuck, player must use reshuffle button (or game over if none left)
+    setTimeout(() => {
+      if (!hasValidChains()) {
+        if (reshufflesRemaining <= 0) {
+          animating = false;
+          triggerClassicGameOver();
+          return;
+        }
+        signalNeedReshuffle();
+      }
+
+      animating = false;
+      requestRender();
+    }, 350);
+  }, totalDuration);
+}
+
+function ageTiles(clearedPath) {
+  const clearedKeys = new Set(clearedPath.map(c => hexKey(c.q, c.r)));
+  let newFreezes = 0;
+  for (const cell of gridCells) {
+    const key = hexKey(cell.q, cell.r);
+    if (clearedKeys.has(key)) continue;
+    const tile = board.get(key);
+    if (!tile) continue;
+    if (tile.age >= FREEZE_AGE) continue; // already frozen
+    tile.age++;
+    if (tile.age >= FREEZE_AGE) newFreezes++;
+  }
+  if (newFreezes > 0 && newFreezes <= 3) {
+    showToastMessage(newFreezes === 1 ? 'A tile froze!' : `${newFreezes} tiles froze!`);
+  }
+}
+
+function applyGravity() {
+  const now = performance.now();
+
+  for (const colKey in gravityColumns) {
+    const colCells = gravityColumns[colKey]; // sorted by r ascending (top to bottom)
+
+    // Collect non-empty tiles
+    const tiles = [];
+    const oldPositions = [];
+    for (const cell of colCells) {
+      const key = hexKey(cell.q, cell.r);
+      if (board.has(key)) {
+        tiles.push(board.get(key));
+        oldPositions.push({ q: cell.q, r: cell.r });
+      }
+    }
+
+    // Clear all
+    for (const cell of colCells) {
+      board.delete(hexKey(cell.q, cell.r));
+    }
+
+    // Place at bottom
+    const startIdx = colCells.length - tiles.length;
+    for (let i = 0; i < tiles.length; i++) {
+      const newCell = colCells[startIdx + i];
+      const oldCell = oldPositions[i];
+      board.set(hexKey(newCell.q, newCell.r), tiles[i]);
+
+      // Animate settling if position changed
+      if (newCell.q !== oldCell.q || newCell.r !== oldCell.r) {
+        const oldPixel = axialToPixel(oldCell.q, oldCell.r, HEX_SIZE);
+        const newPixel = axialToPixel(newCell.q, newCell.r, HEX_SIZE);
+        const offsetY = oldPixel.y - newPixel.y;
+        settleAnims.set(hexKey(newCell.q, newCell.r), {
+          startTime: now,
+          duration: 300,
+          startOffset: offsetY,
+        });
+      }
+    }
+  }
+  requestRender();
+}
+
+function refillBoard() {
+  const now = performance.now();
+  let delay = 0;
+
+  for (const cell of gridCells) {
+    const key = hexKey(cell.q, cell.r);
+    if (!board.has(key)) {
+      const color = Math.floor(rng() * numColors);
+      board.set(key, { color, age: 0 });
+
+      appearAnims.set(key, {
+        startTime: now + delay * 40,
+        duration: 280,
+      });
+      delay++;
+    }
+  }
+  requestRender();
+}
+
+// ═══════════════════════════════════════════
+// DEADLOCK DETECTION
+// ═══════════════════════════════════════════
+function hasValidChains() {
+  // Check if any connected component of same color (non-frozen) has size >= MIN_CHAIN
+  const visited = new Set();
+
+  for (const cell of gridCells) {
+    const key = hexKey(cell.q, cell.r);
+    if (visited.has(key)) continue;
+
+    const tile = board.get(key);
+    if (!tile) continue;
+    if (tile.age >= FREEZE_AGE) { visited.add(key); continue; } // skip frozen
+
+    const componentSize = floodFill(cell.q, cell.r, tile.color, visited);
+    if (componentSize >= MIN_CHAIN) return true;
+  }
+
+  return false;
+}
+
+function floodFill(q, r, color, visited) {
+  const key = hexKey(q, r);
+  if (visited.has(key)) return 0;
+  if (!gridSet.has(key)) return 0;
+  const tile = board.get(key);
+  if (!tile || tile.color !== color) return 0;
+  if (tile.age >= FREEZE_AGE) return 0; // frozen tiles can't be chained
+
+  visited.add(key);
+  let count = 1;
+  for (const d of AXIAL_DIRS) {
+    count += floodFill(q + d.q, r + d.r, color, visited);
+  }
+  return count;
+}
+
+function reshuffleBoard() {
+  // Only shuffle non-frozen tiles; frozen tiles stay in place
+  const frozenMap = new Map(); // key -> tile (frozen)
+  const freeTiles = [];
+  const freeCells = [];
+
+  for (const cell of gridCells) {
+    const key = hexKey(cell.q, cell.r);
+    const tile = board.get(key);
+    if (!tile) continue;
+    if (tile.age >= FREEZE_AGE) {
+      frozenMap.set(key, tile);
+    } else {
+      freeTiles.push(tile);
+      freeCells.push(cell);
+    }
+  }
+
+  // Fisher-Yates shuffle on free tiles only
+  for (let i = freeTiles.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [freeTiles[i], freeTiles[j]] = [freeTiles[j], freeTiles[i]];
+  }
+
+  const now = performance.now();
+  // Place free tiles back
+  freeCells.forEach((cell, i) => {
+    const key = hexKey(cell.q, cell.r);
+    board.set(key, freeTiles[i]);
+    appearAnims.set(key, {
+      startTime: now + Math.random() * 100,
+      duration: 250,
+    });
+  });
+
+  // Recursive check
+  if (!hasValidChains()) reshuffleBoard();
+
+  showToastMessage('Reshuffled!');
+  requestRender();
+}
+
+// ═══════════════════════════════════════════
+// GAME OVER
+// ═══════════════════════════════════════════
+function showGameOver() {
+  document.querySelector('#overlay h2').textContent = 'GAME OVER';
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('stat-cleared').textContent = totalCleared;
+  document.getElementById('stat-chain').textContent = bestChain;
+  document.getElementById('stat-moves').textContent = movesMade;
+  document.getElementById('share-preview').textContent = generateShareText();
+  $overlay.classList.add('visible');
+
+  // Record score to leaderboard
+  const mode = isDaily ? 'daily' : gameMode;
+  addLeaderboardEntry(score, bestChain, mode, totalCleared, movesMade);
+}
+
+function generateShareText() {
+  let mode;
+  if (isDaily) mode = `Daily #${getDailySeed() % 10000}`;
+  else if (gameMode === MODE_CLASSIC) mode = 'Classic';
+  else mode = 'Sprint';
+
+  let text = `HEX CHAIN ${mode}\n`;
+  text += `Score: ${score}\n`;
+  text += `Best chain: ${bestChain} | Cleared: ${totalCleared}\n`;
+  if (gameMode === MODE_CLASSIC) text += `Chains: ${totalChains}\n`;
+  text += `\u2B21\u2B21\u2B21\u2B21\u2B21`;
+  return text;
+}
+
+// ═══════════════════════════════════════════
+// LOCALSTORAGE
+// ═══════════════════════════════════════════
+function loadHighScore() {
+  const key = isDaily ? 'hexchain-hs-daily' : `hexchain-hs-${gameMode}`;
+  try { return parseInt(localStorage.getItem(key) || '0', 10); }
+  catch { return 0; }
+}
+
+function saveHighScore(val) {
+  const key = isDaily ? 'hexchain-hs-daily' : `hexchain-hs-${gameMode}`;
+  try { localStorage.setItem(key, String(val)); }
+  catch {}
+}
+
+function hasSeenTutorial() {
+  try { return localStorage.getItem('hexchain-tutorial') === '1'; }
+  catch { return false; }
+}
+
+function markTutorialSeen() {
+  try { localStorage.setItem('hexchain-tutorial', '1'); }
+  catch {}
+}
+
+// ═══════════════════════════════════════════
+// SPRINT TIMER
+// ═══════════════════════════════════════════
+function startSprintTimer() {
+  if (sprintTimerRunning) return;
+  sprintTimerRunning = true;
+  lastTimerTick = performance.now();
+  timerInterval = setInterval(tickTimer, 100);
+}
+
+function stopSprintTimer() {
+  sprintTimerRunning = false;
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function tickTimer() {
+  if (!sprintTimerRunning || gameOver) {
+    stopSprintTimer();
+    return;
+  }
+  const now = performance.now();
+  const elapsed = (now - lastTimerTick) / 1000;
+  lastTimerTick = now;
+  sprintTimeLeft = Math.max(0, sprintTimeLeft - elapsed);
+  updateTimerDisplay();
+
+  if (sprintTimeLeft <= 0) {
+    stopSprintTimer();
+    gameOver = true;
+    if (score > highScore) {
+      highScore = score;
+      saveHighScore(highScore);
+      $highscore.textContent = highScore;
+    }
+    setTimeout(showGameOver, 800);
+  }
+}
+
+function updateTimerDisplay() {
+  const secs = Math.ceil(sprintTimeLeft);
+  $moves.textContent = secs;
+  if (secs <= 10) {
+    $moves.classList.add('timer-low');
+  } else {
+    $moves.classList.remove('timer-low');
+  }
+}
+
+function showTimeBonus(bonus) {
+  const $bonus = document.getElementById('time-bonus');
+  $bonus.textContent = `+${bonus}s`;
+  $bonus.classList.remove('show');
+  void $bonus.offsetWidth;
+  $bonus.classList.add('show');
+  setTimeout(() => $bonus.classList.remove('show'), 1000);
+}
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+function showToastMessage(msg) {
+  $toast.textContent = msg;
+  $toast.classList.add('visible');
+  setTimeout(() => $toast.classList.remove('visible'), 1800);
+}
+
+// ═══════════════════════════════════════════
+// LEADERBOARD
+// ═══════════════════════════════════════════
+const LB_KEY = 'hexchain-leaderboard';
+const LB_MAX = 10;
+let lbCurrentTab = 'today';
+
+function loadLeaderboard() {
+  try {
+    const data = localStorage.getItem(LB_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch { return []; }
+}
+
+function saveLeaderboard(entries) {
+  try { localStorage.setItem(LB_KEY, JSON.stringify(entries)); }
+  catch {}
+}
+
+function addLeaderboardEntry(entryScore, entryBestChain, entryMode, entryCleared, entryMoves) {
+  const entries = loadLeaderboard();
+  entries.push({
+    score: entryScore,
+    chain: entryBestChain,
+    cleared: entryCleared,
+    moves: entryMoves,
+    mode: entryMode,
+    date: Date.now(),
+  });
+  // Sort by score descending, keep all (we filter by period when displaying)
+  entries.sort((a, b) => b.score - a.score);
+  // Cap total stored entries at 100 to prevent localStorage bloat
+  if (entries.length > 100) entries.length = 100;
+  saveLeaderboard(entries);
+}
+
+function filterLeaderboardByPeriod(entries, period) {
+  const now = Date.now();
+  let cutoff;
+  if (period === 'today') {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    cutoff = d.getTime();
+  } else if (period === 'month') {
+    const d = new Date();
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    cutoff = d.getTime();
+  } else {
+    cutoff = 0; // all time
+  }
+  return entries.filter(e => e.date >= cutoff).slice(0, LB_MAX);
+}
+
+function formatLbDate(ts) {
+  const d = new Date(ts);
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  return `${month}/${day}`;
+}
+
+function renderLeaderboard(period) {
+  lbCurrentTab = period;
+  const entries = loadLeaderboard();
+  const filtered = filterLeaderboardByPeriod(entries, period);
+
+  // Update tabs
+  document.querySelectorAll('.lb-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.lbTab === period);
+  });
+
+  const $body = document.getElementById('lb-body');
+
+  if (filtered.length === 0) {
+    $body.innerHTML = '<div class="lb-empty">No scores yet. Go play!</div>';
+    return;
+  }
+
+  let html = '<table class="lb-table"><thead><tr>';
+  html += '<th>#</th><th>Score</th><th>Chain</th><th>Mode</th><th style="text-align:right">Date</th>';
+  html += '</tr></thead><tbody>';
+
+  filtered.forEach((entry, i) => {
+    const rank = i + 1;
+    const rankClass = rank <= 3 ? ` lb-rank-${rank}` : '';
+    const modeLabel = entry.mode === 'classic' ? 'CLS' : entry.mode === 'sprint' ? 'SPR' : 'DLY';
+    html += `<tr>`;
+    html += `<td class="lb-rank${rankClass}">${rank}</td>`;
+    html += `<td class="lb-score-cell">${entry.score.toLocaleString()}</td>`;
+    html += `<td class="lb-chain-cell">${entry.chain}</td>`;
+    html += `<td class="lb-mode-cell">${modeLabel}</td>`;
+    html += `<td class="lb-date-cell">${formatLbDate(entry.date)}</td>`;
+    html += `</tr>`;
+  });
+
+  html += '</tbody></table>';
+  $body.innerHTML = html;
+}
+
+function showLeaderboard() {
+  renderLeaderboard(lbCurrentTab);
+  document.getElementById('leaderboard').classList.add('visible');
+}
+
+function hideLeaderboard() {
+  document.getElementById('leaderboard').classList.remove('visible');
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+function initGame(mode = MODE_CLASSIC, daily = false) {
+  gameMode = mode;
+  isDaily = daily;
+  rng = daily ? mulberry32(getDailySeed()) : Math.random;
+
+  // Set color count based on mode
+  numColors = NUM_COLORS;
+
+  board.clear();
+  currentPath = [];
+  pathColor = -1;
+  isDragging = false;
+  animating = false;
+  score = 0;
+  highScore = loadHighScore();
+  bestChain = 0;
+  totalCleared = 0;
+  totalChains = 0;
+  reshufflesRemaining = MAX_RESHUFFLES;
+  gameOver = false;
+  movesMade = 0;
+
+  // Reset timer
+  stopSprintTimer();
+  sprintTimeLeft = SPRINT_TIME;
+  $moves.classList.remove('timer-low');
+
+  clearAnims.clear();
+  settleAnims.clear();
+  appearAnims.clear();
+  particles.length = 0;
+  floatTexts.length = 0;
+
+  // Fill board
+  for (const cell of gridCells) {
+    const color = Math.floor(rng() * numColors);
+    board.set(hexKey(cell.q, cell.r), { color, age: 0 });
+  }
+
+  // Ensure valid chains exist
+  if (!hasValidChains()) reshuffleBoard();
+
+  // Update DOM
+  $score.textContent = 0;
+  $highscore.textContent = highScore;
+
+  // Mode-specific UI
+  const $movesLabel = document.getElementById('moves-label');
+  if (mode === MODE_SPRINT) {
+    $movesLabel.textContent = 'Time';
+    $moves.textContent = SPRINT_TIME;
+  } else {
+    $movesLabel.textContent = 'Chains';
+    $moves.textContent = 0;
+  }
+
+  // Highlight active mode button
+  document.getElementById('btn-classic').className = `btn ${mode === MODE_CLASSIC && !daily ? 'btn-primary' : 'btn-secondary'}`;
+  document.getElementById('btn-sprint').className = `btn ${mode === MODE_SPRINT && !daily ? 'btn-primary' : 'btn-secondary'}`;
+  document.getElementById('btn-daily').className = `btn ${daily ? 'btn-primary' : 'btn-secondary'}`;
+
+  // Reset reshuffle button
+  updateReshuffleButton();
+
+  $overlay.classList.remove('visible');
+  requestRender();
+}
+
+function updateReshuffleButton() {
+  const $btn = document.getElementById('btn-reshuffle');
+  const $count = document.getElementById('reshuffle-count');
+  $count.textContent = reshufflesRemaining;
+  $btn.disabled = reshufflesRemaining <= 0;
+  $btn.classList.remove('pulse');
+}
+
+function signalNeedReshuffle() {
+  const $btn = document.getElementById('btn-reshuffle');
+  $btn.classList.add('pulse');
+  showToastMessage('No more moves! Shuffle the board');
+}
+
+function doReshuffle() {
+  if (reshufflesRemaining <= 0 || animating || gameOver) return;
+  reshufflesRemaining--;
+  reshuffleBoard();
+  updateReshuffleButton();
+}
+
+// ═══════════════════════════════════════════
+// EVENT LISTENERS
+// ═══════════════════════════════════════════
+document.getElementById('btn-classic').addEventListener('click', () => initGame(MODE_CLASSIC));
+document.getElementById('btn-sprint').addEventListener('click', () => initGame(MODE_SPRINT));
+document.getElementById('btn-daily').addEventListener('click', () => initGame(MODE_SPRINT, true));
+document.getElementById('btn-replay').addEventListener('click', () => {
+  $overlay.classList.remove('visible');
+  initGame(gameMode, isDaily);
+});
+document.getElementById('btn-share').addEventListener('click', () => {
+  const text = generateShareText();
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showToastMessage('Copied to clipboard!'));
+  }
+});
+document.getElementById('btn-help').addEventListener('click', () => {
+  $tutorial.classList.add('visible');
+});
+document.getElementById('btn-tutorial-close').addEventListener('click', () => {
+  $tutorial.classList.remove('visible');
+  markTutorialSeen();
+});
+document.getElementById('btn-reshuffle').addEventListener('click', doReshuffle);
+document.getElementById('btn-trophy').addEventListener('click', showLeaderboard);
+document.getElementById('btn-overlay-lb').addEventListener('click', showLeaderboard);
+document.getElementById('btn-lb-close').addEventListener('click', hideLeaderboard);
+document.querySelectorAll('.lb-tab').forEach(tab => {
+  tab.addEventListener('click', () => renderLeaderboard(tab.dataset.lbTab));
+});
+
+// Handle resize (including mobile viewport changes like URL bar show/hide)
+function handleResize() {
+  setupCanvas();
+  initAmbientParticles();
+  requestRender();
+}
+window.addEventListener('resize', handleResize);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', handleResize);
+}
+
+// ═══════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════
+setupCanvas();
+initAmbientParticles();
+
+// Force viewport scale reset for Chrome iOS (which can retain stale zoom)
+function resetViewportZoom() {
+  const vp = document.querySelector('meta[name="viewport"]');
+  if (vp) {
+    const original = vp.getAttribute('content');
+    vp.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0');
+    setTimeout(() => {
+      vp.setAttribute('content', original);
+    }, 50);
+  }
+}
+resetViewportZoom();
+
+// Re-setup after a short delay for mobile browsers that report wrong dimensions initially
+setTimeout(() => {
+  setupCanvas();
+  initAmbientParticles();
+  requestRender();
+}, 150);
+
+// Also re-setup on full page load (images, fonts, etc.)
+window.addEventListener('load', () => {
+  setupCanvas();
+  initAmbientParticles();
+  requestRender();
+});
+
+if (!hasSeenTutorial()) {
+  $tutorial.classList.add('visible');
+}
+initGame(MODE_CLASSIC);
+
+// Keep ambient particles moving
+setInterval(() => {
+  if (!rafId) requestRender();
+}, 50);
+</script>
+</body>
+</html>
