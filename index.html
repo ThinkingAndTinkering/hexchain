@@ -913,13 +913,17 @@
 
   <div class="info-bar">
     <div class="moves-display" id="moves-display">
-      <label id="moves-label">Moves</label>
-      <div class="moves-value" id="moves">45</div>
+      <label id="moves-label">Chains</label>
+      <div class="moves-value" id="moves">0</div>
       <div class="time-bonus" id="time-bonus"></div>
+    </div>
+    <div class="moves-display" id="total-moves-display">
+      <label>Moves</label>
+      <div class="moves-value" id="total-moves">0</div>
     </div>
     <div class="chain-info" id="chain-info"></div>
     <button class="btn-reshuffle" id="btn-reshuffle" aria-label="Reshuffle board">
-      <span class="reshuffle-icon">&#x21BB;</span><span class="reshuffle-label">Shuffle</span><span class="reshuffle-count" id="reshuffle-count">2</span>
+      <span class="reshuffle-icon">&#x21BB;</span><span class="reshuffle-label">Shuffle</span><span class="reshuffle-count" id="reshuffle-count">1</span>
     </button>
   </div>
 
@@ -989,11 +993,11 @@
     </div>
     <div class="rule">
       <div class="rule-icon">&#x21BB;</div>
-      <div class="rule-text">Stuck? You get <strong>2 reshuffles</strong> per game. Use them wisely — when they're gone, a deadlock ends the game!</div>
+      <div class="rule-text">Stuck? You get <strong>1 reshuffle</strong> per game. Use it wisely — when it's gone, a deadlock ends the game!</div>
     </div>
     <div class="rule">
       <div class="rule-icon">&#x1F3C6;</div>
-      <div class="rule-text"><strong>Classic:</strong> Unlimited moves, but tiles freeze. <strong>Sprint:</strong> 45s timer — long chains (4+) earn bonus time! A <strong>4+ chain</strong> wipes all tiles of that color!</div>
+      <div class="rule-text"><strong>4+ chain</strong> wipes that color! <strong>5+</strong> earns a Nova tile, <strong>7+</strong> earns Lightning! Keep a <strong>4+ streak</strong> going for score multipliers!</div>
     </div>
     <button class="btn btn-primary" id="btn-tutorial-close">GOT IT</button>
   </div>
@@ -1026,7 +1030,7 @@ const SQRT3 = Math.sqrt(3);
 
 // Sprint timer
 const SPRINT_TIME = 45; // seconds
-const TIME_BONUSES = { 3: 0, 4: 2, 5: 4, 6: 7, 7: 10 }; // chain length -> bonus seconds
+const TIME_BONUSES = { 3: 0, 4: 1, 5: 2, 6: 3, 7: 5 }; // chain length -> bonus seconds
 function getTimeBonus(len) {
   if (len >= 7) return TIME_BONUSES[7];
   return TIME_BONUSES[len] || 0;
@@ -1036,7 +1040,12 @@ function getTimeBonus(len) {
 const NUM_COLORS = 6;
 
 // Freeze mechanic: tiles freeze after this many moves without being cleared
-const FREEZE_AGE = 8;
+const FREEZE_AGE = 7;
+
+// Special tile types
+const TILE_WILD = 'wild';       // Rainbow tile — matches any color
+const TILE_NOVA = 'nova';       // Nova tile — clears all adjacent tiles when chained (earned after 5+ chain)
+const WILDCARD_INTERVAL = 8;    // Drop a wildcard every N moves (8-10, randomized)
 
 let numColors = NUM_COLORS;
 
@@ -1189,8 +1198,19 @@ let isDaily = false;
 let movesMade = 0;
 let totalChains = 0;  // for Classic mode escalation
 let gameStartTime = 0; // for duration tracking
-const MAX_RESHUFFLES = 2;
+const MAX_RESHUFFLES = 1;
 let reshufflesRemaining = MAX_RESHUFFLES;
+
+// Streak multiplier: consecutive 4+ chains build a multiplier
+let streakCount = 0;      // how many consecutive 4+ chains
+let streakMultiplier = 1;  // current score multiplier
+
+// Wildcard spawn tracking
+let movesSinceWildcard = 0;
+let nextWildcardAt = WILDCARD_INTERVAL; // randomized between 8-10
+
+// Pending special tile spawns (earned from long chains)
+let pendingNovas = 0;
 
 // Sprint timer state
 let sprintTimeLeft = SPRINT_TIME;
@@ -1202,6 +1222,7 @@ let timerInterval = null;
 const clearAnims = new Map();
 const settleAnims = new Map();
 const appearAnims = new Map();
+const highlightAnims = new Map(); // key -> { startTime, duration, tile, onComplete: fn }
 const particles = [];
 const floatTexts = [];
 
@@ -1226,6 +1247,7 @@ let chainInfoTimeout = null;
 const $score = document.getElementById('score');
 const $highscore = document.getElementById('highscore');
 const $moves = document.getElementById('moves');
+const $totalMoves = document.getElementById('total-moves');
 const $chainInfo = document.getElementById('chain-info');
 const $overlay = document.getElementById('overlay');
 const $tutorial = document.getElementById('tutorial');
@@ -1381,8 +1403,8 @@ function renderLoop(timestamp) {
   }
 
   const stillAnimating = clearAnims.size > 0 || settleAnims.size > 0 ||
-    appearAnims.size > 0 || particles.length > 0 || floatTexts.length > 0 ||
-    trailGlows.size > 0 || ripples.length > 0;
+    appearAnims.size > 0 || highlightAnims.size > 0 || particles.length > 0 ||
+    floatTexts.length > 0 || trailGlows.size > 0 || ripples.length > 0;
 
   render(timestamp);
 
@@ -1399,6 +1421,26 @@ function render(timestamp) {
 
   // Honeycomb backdrop
   drawHoneycombBackdrop();
+
+  // Empty cell fills — visible shading so gaps aren't pitch black
+  ctx.save();
+  for (const cell of gridCells) {
+    const key = hexKey(cell.q, cell.r);
+    if (board.has(key)) continue; // occupied, skip
+    if (clearAnims.has(key)) continue; // still animating out, skip
+    if (appearAnims.has(key)) continue; // about to appear, skip
+    const pixel = axialToPixel(cell.q, cell.r, HEX_SIZE);
+    const px = centerX + pixel.x;
+    const py = centerY + pixel.y;
+    drawHexRounded(px, py, HEX_SIZE - 1, 4);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.fill();
+    drawHexRounded(px, py, HEX_SIZE - 1, 4);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  ctx.restore();
 
   // Trail glows (afterglow on cleared cells for long chains)
   for (const [key, glow] of trailGlows) {
@@ -1458,12 +1500,14 @@ function render(timestamp) {
     ctx.globalAlpha = anim.opacity;
 
     const tileColor = TILE_COLORS[tile.color];
+    const isSpecial = tile.special;
+    const efa = getEffectiveFreezeAge();
 
     // Outer glow for in-path tiles (drawn before the tile fill for a halo effect)
     if (anim.inPath) {
       ctx.save();
       drawHexRounded(0, anim.offsetY, HEX_SIZE + 4, 5);
-      ctx.fillStyle = tileColor.light;
+      ctx.fillStyle = isSpecial === TILE_WILD ? '#fff' : tileColor.light;
       ctx.globalAlpha = 0.25;
       ctx.fill();
       ctx.restore();
@@ -1471,41 +1515,114 @@ function render(timestamp) {
 
     // Gem gradient fill — brighter if in path
     drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
-    const grad = ctx.createRadialGradient(
-      -HEX_SIZE * 0.2, anim.offsetY - HEX_SIZE * 0.2, 0,
-      0, anim.offsetY, HEX_SIZE
-    );
-    if (anim.inPath) {
-      // Brighter version for selected tiles
-      grad.addColorStop(0, '#fff');
-      grad.addColorStop(0.25, tileColor.light);
-      grad.addColorStop(0.6, tileColor.base);
-      grad.addColorStop(1, tileColor.light);
+
+    if (isSpecial === TILE_WILD) {
+      // 6-colored hex wedges — each segment is one of the 6 game tile colors
+      ctx.fill(); // fill base shape first (will be overdrawn by wedges)
+      ctx.save();
+      ctx.clip(); // clip to hex shape
+      for (let wi = 0; wi < 6; wi++) {
+        const a0 = Math.PI / 3 * wi - Math.PI / 6;
+        const a1 = a0 + Math.PI / 3;
+        ctx.beginPath();
+        ctx.moveTo(0, anim.offsetY);
+        ctx.arc(0, anim.offsetY, HEX_SIZE + 2, a0, a1);
+        ctx.closePath();
+        ctx.fillStyle = TILE_COLORS[wi].base;
+        ctx.fill();
+      }
+      // Subtle white center highlight to unify the wedges
+      const wcGrad = ctx.createRadialGradient(0, anim.offsetY, 0, 0, anim.offsetY, HEX_SIZE * 0.6);
+      wcGrad.addColorStop(0, 'rgba(255,255,255,0.3)');
+      wcGrad.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = wcGrad;
+      ctx.fillRect(-HEX_SIZE, anim.offsetY - HEX_SIZE, HEX_SIZE * 2, HEX_SIZE * 2);
+      ctx.restore();
+      // Re-draw the hex path for subsequent stroke/clip operations
+      drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
+    } else if (isSpecial === TILE_NOVA) {
+      // Nova tile — horizontal stripes alternating tile color and white
+      // First fill with tile base color
+      ctx.fillStyle = tileColor.base;
+      ctx.fill();
+      // Draw horizontal white stripes clipped to hex — thinner bands, more color visible
+      ctx.save();
+      ctx.clip();
+      const stripeH = HEX_SIZE * 0.09; // slim white bands
+      const bandH = HEX_SIZE * 0.34; // generous color gap between stripes
+      ctx.fillStyle = '#fff';
+      ctx.globalAlpha = anim.opacity * 0.6;
+      for (let sy = anim.offsetY - HEX_SIZE * 1.2; sy < anim.offsetY + HEX_SIZE * 1.2; sy += bandH) {
+        ctx.fillRect(-HEX_SIZE * 1.2, sy, HEX_SIZE * 2.4, stripeH);
+      }
+      ctx.restore();
+      ctx.globalAlpha = anim.opacity;
+      // Re-draw hex path for subsequent stroke
+      drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
     } else {
-      grad.addColorStop(0, tileColor.light);
-      grad.addColorStop(0.5, tileColor.base);
-      grad.addColorStop(1, tileColor.dark);
+      const grad = ctx.createRadialGradient(
+        -HEX_SIZE * 0.2, anim.offsetY - HEX_SIZE * 0.2, 0,
+        0, anim.offsetY, HEX_SIZE
+      );
+      if (anim.inPath) {
+        grad.addColorStop(0, '#fff');
+        grad.addColorStop(0.25, tileColor.light);
+        grad.addColorStop(0.6, tileColor.base);
+        grad.addColorStop(1, tileColor.light);
+      } else {
+        grad.addColorStop(0, tileColor.light);
+        grad.addColorStop(0.5, tileColor.base);
+        grad.addColorStop(1, tileColor.dark);
+      }
+      ctx.fillStyle = grad;
     }
-    ctx.fillStyle = grad;
-    ctx.fill();
+    // Only fill + gem sheen for non-nova tiles (nova already drew its own fill + stripes)
+    if (isSpecial !== TILE_NOVA) {
+      ctx.fill();
 
-    // Top highlight arc (gem sheen) — stronger on in-path tiles
-    ctx.save();
-    ctx.clip();
-    ctx.beginPath();
-    ctx.ellipse(-HEX_SIZE * 0.15, anim.offsetY - HEX_SIZE * 0.5, HEX_SIZE * 0.6, HEX_SIZE * 0.25, -0.3, 0, Math.PI * 2);
-    ctx.fillStyle = anim.inPath ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)';
-    ctx.fill();
-    ctx.restore();
+      // Top highlight arc (gem sheen) — stronger on in-path tiles
+      ctx.save();
+      ctx.clip();
+      ctx.beginPath();
+      ctx.ellipse(-HEX_SIZE * 0.15, anim.offsetY - HEX_SIZE * 0.5, HEX_SIZE * 0.6, HEX_SIZE * 0.25, -0.3, 0, Math.PI * 2);
+      ctx.fillStyle = anim.inPath ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)';
+      ctx.fill();
+      ctx.restore();
+    }
 
-    // Border — bright white for in-path, subtle for others
+    // Special tile icon overlay (wildcard only — nova uses stripes, no icon)
+    if (isSpecial === TILE_WILD && tile.age < efa) {
+      ctx.save();
+      ctx.globalAlpha = 0.85;
+      ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff';
+      ctx.shadowColor = 'rgba(255,255,255,0.6)';
+      ctx.shadowBlur = 6;
+      ctx.fillText('\u2726', 0, anim.offsetY); // ✦ star
+      ctx.restore();
+    }
+
+    // Border — bright white for in-path, subtle for others, special styles for specials
     drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
-    ctx.strokeStyle = anim.inPath ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.08)';
-    ctx.lineWidth = anim.inPath ? 2 : 1;
+    if (isSpecial === TILE_NOVA && !anim.inPath) {
+      // Nova: prominent pulsating white border
+      const borderPulse = 0.25 + 0.2 * Math.sin(timestamp * 0.004);
+      ctx.strokeStyle = `rgba(255,255,255,${borderPulse})`;
+      ctx.lineWidth = 2.5;
+    } else if (isSpecial === TILE_WILD && !anim.inPath) {
+      const borderPulse = 0.15 + 0.1 * Math.sin(timestamp * 0.003);
+      ctx.strokeStyle = `rgba(255,255,255,${borderPulse})`;
+      ctx.lineWidth = 1.5;
+    } else {
+      ctx.strokeStyle = anim.inPath ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = anim.inPath ? 2 : 1;
+    }
     ctx.stroke();
 
     // Sparkle twinkle: rare gem glint — each tile sparkles briefly every ~8 seconds
-    if (tile.age < FREEZE_AGE) {
+    if (tile.age < efa) {
       const sparklePhase = ((cell.q * 7 + cell.r * 13 + tile.color * 31) % 97) / 97;
       const sparkleT = ((timestamp * 0.000125 + sparklePhase) % 1);
       if (sparkleT < 0.025) {
@@ -1531,7 +1648,7 @@ function render(timestamp) {
 
     // Freeze warning stages (only in Classic mode)
     if (gameMode !== MODE_SPRINT) {
-      const movesLeft = FREEZE_AGE - tile.age;
+      const movesLeft = efa - tile.age;
       if (movesLeft <= 3 && movesLeft > 0) {
         // Darken slightly — preserves tile color identity while showing danger
         const dimAmount = movesLeft === 3 ? 0.08 : movesLeft === 2 ? 0.15 : 0.22;
@@ -1564,7 +1681,7 @@ function render(timestamp) {
       }
 
       // Fully frozen overlay
-      if (tile.age >= FREEZE_AGE) {
+      if (tile.age >= efa) {
         // Darken + desaturate but keep a color tint visible
         drawHexRounded(0, anim.offsetY, HEX_SIZE, 4);
         ctx.fillStyle = 'rgba(20, 20, 35, 0.5)';
@@ -1589,6 +1706,50 @@ function render(timestamp) {
         ctx.restore();
       }
     }
+
+    ctx.restore();
+  }
+
+  // Highlighted cells (glow before clearing — used by color wipe & nova)
+  for (const [key, hl] of highlightAnims) {
+    const t = Math.min(1, (timestamp - hl.startTime) / hl.duration);
+    if (t >= 1) {
+      highlightAnims.delete(key);
+      if (hl.onComplete) hl.onComplete(key);
+      continue;
+    }
+    const [hq, hr] = key.split(',').map(Number);
+    const hPixel = axialToPixel(hq, hr, HEX_SIZE);
+    const hpx = centerX + hPixel.x;
+    const hpy = centerY + hPixel.y;
+    const htc = TILE_COLORS[hl.tile.color];
+
+    ctx.save();
+    ctx.translate(hpx, hpy);
+
+    // Subtle pulsing glow: fade in then out
+    const glowT = t < 0.3 ? t / 0.3 : 1 - (t - 0.3) / 0.7;
+    const glowAlpha = 0.2 * glowT;
+
+    // Draw the base tile (slightly brighter)
+    drawHexRounded(0, 0, HEX_SIZE, 4);
+    const hlGrad = ctx.createRadialGradient(-HEX_SIZE * 0.2, -HEX_SIZE * 0.2, 0, 0, 0, HEX_SIZE);
+    hlGrad.addColorStop(0, htc.light);
+    hlGrad.addColorStop(0.5, htc.base);
+    hlGrad.addColorStop(1, htc.dark);
+    ctx.fillStyle = hlGrad;
+    ctx.fill();
+
+    // Subtle white glow overlay (less intense)
+    drawHexRounded(0, 0, HEX_SIZE, 4);
+    ctx.fillStyle = `rgba(255, 255, 255, ${glowAlpha})`;
+    ctx.fill();
+
+    // Soft border glow
+    drawHexRounded(0, 0, HEX_SIZE, 4);
+    ctx.strokeStyle = `rgba(255, 255, 255, ${0.35 * glowT})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
     ctx.restore();
   }
@@ -1945,10 +2106,11 @@ function onPointerDown(e) {
 
   if (!gridSet.has(key) || !board.has(key)) return;
   const startTile = board.get(key);
-  if (startTile.age >= FREEZE_AGE) return; // frozen tile
+  if (startTile.age >= getEffectiveFreezeAge()) return; // frozen tile
 
   isDragging = true;
-  pathColor = startTile.color;
+  // Wildcard tiles adopt the color of the next tile added to the path
+  pathColor = startTile.special === TILE_WILD ? -1 : startTile.color;
   currentPath = [{ q: axial.q, r: axial.r }];
 
   canvas.setPointerCapture(e.pointerId);
@@ -1982,10 +2144,17 @@ function onPointerMove(e) {
   // Must be adjacent
   if (!areAdjacent(last, axial)) return;
 
-  // Must be same color and not frozen
+  // Must be same color (or wild) and not frozen
   const tile = board.get(key);
-  if (!tile || tile.color !== pathColor) return;
-  if (tile.age >= FREEZE_AGE) return;
+  if (!tile) return;
+  if (tile.age >= getEffectiveFreezeAge()) return;
+  const isWild = tile.special === TILE_WILD;
+  // If pathColor not yet set (started on wildcard), adopt this tile's color
+  if (pathColor === -1 && !isWild) {
+    pathColor = tile.color;
+  }
+  // Must match path color, or be a wildcard, or path started on wildcard and color not yet set
+  if (!isWild && pathColor !== -1 && tile.color !== pathColor) return;
 
   // Must not already be in path
   if (currentPath.some(c => c.q === axial.q && c.r === axial.r)) return;
@@ -2041,13 +2210,32 @@ function executeChain(path) {
 
   const length = path.length;
   const clearedColor = pathColor; // capture before onPointerUp resets it
-  const points = calculateScore(length);
+
+  // Streak multiplier: consecutive 4+ chains build it up
+  if (length >= 4) {
+    streakCount++;
+    streakMultiplier = 1 + (streakCount - 1) * 0.5; // 1x, 1.5x, 2x, 2.5x...
+    if (streakCount >= 2) {
+      spawnFloatText(centerX, centerY - HEX_SIZE * 3.5, `${streakMultiplier}x STREAK!`, 16);
+    }
+  } else {
+    streakCount = 0;
+    streakMultiplier = 1;
+  }
+
+  const basePoints = calculateScore(length);
+  const points = Math.floor(basePoints * streakMultiplier);
   score += points;
   movesMade++;
+  movesSinceWildcard++;
+  $totalMoves.textContent = movesMade;
   totalCleared += length;
   totalChains++;
   const prevBest = bestChain;
   if (length > bestChain) bestChain = length;
+
+  // Earn special tiles from long chains
+  if (length >= 5) pendingNovas++;
 
   // Sprint: start timer on first chain, add time bonus for long chains
   if (gameMode === MODE_SPRINT) {
@@ -2068,6 +2256,8 @@ function executeChain(path) {
     triggered_color_reset: length >= 6 && gameMode !== MODE_SPRINT,
     triggered_global_reset: length >= 7 && gameMode !== MODE_SPRINT,
     move_number: movesMade,
+    streak_count: streakCount,
+    streak_multiplier: streakMultiplier,
   });
 
 
@@ -2117,13 +2307,20 @@ function executeChain(path) {
   const tier = getChainTier(length);
   $chainInfo.className = 'chain-info active' + (tier.tier ? ` tier-${tier.tier}` : '');
   const bonusText = (gameMode === MODE_SPRINT && getTimeBonus(length) > 0) ? ` \u00b7 +${getTimeBonus(length)}s` : '';
-  $chainInfo.innerHTML = `${tier.label}<span class="chain-label">${length} chain \u00b7 +${points}${bonusText}</span>`;
+  const streakText = streakMultiplier > 1 ? ` \u00b7 ${streakMultiplier}x` : '';
+  $chainInfo.innerHTML = `${tier.label}<span class="chain-label">${length} chain \u00b7 +${points}${streakText}${bonusText}</span>`;
   clearTimeout(chainInfoTimeout);
   chainInfoTimeout = setTimeout(() => {
     $chainInfo.className = 'chain-info';
   }, length >= 8 ? 2500 : length >= 6 ? 2000 : length >= 4 ? 1600 : 1200);
 
-  // Save tiles before removal (for clear animation rendering)
+  // Save tiles before removal (for clear animation + nova/lightning checks)
+  const savedTiles = new Map();
+  for (const cell of path) {
+    const key = hexKey(cell.q, cell.r);
+    const tile = board.get(key);
+    if (tile) savedTiles.set(key, { ...tile });
+  }
   const staggerDelay = 65;
   const cellDuration = 450;
   const now = performance.now();
@@ -2173,62 +2370,30 @@ function executeChain(path) {
      * ==================================================================== */
     const chainColor = clearedColor;
 
-    // --- TIER 1: COLOR WIPE (4+ chain) ---
-    if (length >= 4) {
-      const wipeTiles = [];
-      for (const cell of gridCells) {
-        const key = hexKey(cell.q, cell.r);
-        const tile = board.get(key);
-        if (tile && tile.color === chainColor) {
-          const pixel = axialToPixel(cell.q, cell.r, HEX_SIZE);
-          const dist = Math.sqrt(pixel.x * pixel.x + pixel.y * pixel.y);
-          wipeTiles.push({ cell, key, tile: { ...tile }, dist, pixel });
+    // Collect nova targets BEFORE gravity (so we know which adjacent tiles to affect)
+    const novaTiles = [];
+    for (const cell of path) {
+      const tile = savedTiles.get(hexKey(cell.q, cell.r));
+      if (tile && tile.special === TILE_NOVA) {
+        for (const d of AXIAL_DIRS) {
+          const nq = cell.q + d.q, nr = cell.r + d.r;
+          const nk = hexKey(nq, nr);
+          if (board.has(nk)) {
+            const nt = board.get(nk);
+            novaTiles.push({ key: nk, tile: { ...nt }, q: nq, r: nr });
+          }
         }
       }
-      wipeTiles.sort((a, b) => a.dist - b.dist);
-
-      if (wipeTiles.length > 0) {
-        const now2 = performance.now();
-
-        ripples.push({
-          cx: centerX, cy: centerY,
-          startTime: now2,
-          duration: 1200, // longer ripple to match slower wipe wave
-          color: chainColor,
-        });
-
-        wipeTiles.forEach((wt, i) => {
-          const delay = i * 100; // slower radial wave (was 50)
-          clearAnims.set(wt.key, {
-            startTime: now2 + delay,
-            duration: 700, // longer pop animation (was 450)
-            tile: wt.tile,
-          });
-          const wpx = centerX + wt.pixel.x;
-          const wpy = centerY + wt.pixel.y;
-          setTimeout(() => {
-            spawnParticles(wpx, wpy, chainColor, 8);
-          }, delay);
-          board.delete(wt.key);
-        });
-
-        const wipeBonus = wipeTiles.length * 50;
-        score += wipeBonus;
-        totalCleared += wipeTiles.length;
-        $score.textContent = score;
-
-        spawnFloatText(centerX, centerY - 20, 'COLOR WIPE!', 24);
-        spawnFloatText(centerX, centerY + 20, `+${wipeBonus}`, 20);
-
-        const scoreBlock = $score.closest('.score-block');
-        scoreBlock.classList.remove('score-shake');
-        void scoreBlock.offsetWidth;
-        scoreBlock.classList.add('score-shake');
-      }
-      requestRender();
     }
+    // De-duplicate nova targets
+    const novaMap = new Map();
+    for (const nt of novaTiles) {
+      if (!novaMap.has(nt.key)) novaMap.set(nt.key, nt);
+    }
+    const novaTargetList = [...novaMap.values()];
 
     // --- TIER 2 & 3: FREEZE RESET (Classic mode only) ---
+    // Applied BEFORE gravity so freeze effects apply to current board state
     if (gameMode !== MODE_SPRINT) {
       if (length >= 7) {
         // 7+ CHAIN: unfreeze & reset ALL tiles of ALL colors to age 0
@@ -2238,7 +2403,7 @@ function executeChain(path) {
           const tile = board.get(key);
           if (!tile) continue;
           if (tile.age > 0) {
-            const wasFrozen = tile.age >= FREEZE_AGE;
+            const wasFrozen = tile.age >= getEffectiveFreezeAge();
             tile.age = 0;
             if (wasFrozen) {
               globalThawCount++;
@@ -2275,7 +2440,7 @@ function executeChain(path) {
           const key = hexKey(cell.q, cell.r);
           const tile = board.get(key);
           if (tile && tile.color === chainColor && tile.age > 0) {
-            const wasFrozen = tile.age >= FREEZE_AGE;
+            const wasFrozen = tile.age >= getEffectiveFreezeAge();
             tile.age = 0;
             if (wasFrozen) {
               thawCount++;
@@ -2313,44 +2478,185 @@ function executeChain(path) {
     // Age all surviving tiles (before gravity/refill so new tiles start at 0)
     ageTiles(path);
 
-    // Apply gravity
-    applyGravity();
-
-    // Refill
-    refillBoard();
-
-    // Check deadlock — if stuck, player must use reshuffle button (or game over if none left)
-    setTimeout(() => {
-      if (!hasValidChains()) {
-        if (reshufflesRemaining <= 0) {
-          animating = false;
-          triggerClassicGameOver();
-          return;
+    // Helper: finish the chain (deadlock check + unlock input)
+    function finishChain() {
+      setTimeout(() => {
+        if (!hasValidChains()) {
+          if (reshufflesRemaining <= 0) {
+            animating = false;
+            triggerClassicGameOver();
+            return;
+          }
+          signalNeedReshuffle();
         }
-        signalNeedReshuffle();
+        animating = false;
+        requestRender();
+      }, 500);
+    }
+
+    // Helper: run the color wipe phase (called after nova phase or directly)
+    function runColorWipePhase() {
+      if (length < 4) { finishChain(); return; }
+
+      const wipeTiles = [];
+      for (const cell of gridCells) {
+        const key = hexKey(cell.q, cell.r);
+        const tile = board.get(key);
+        // Wipe tiles of the chain color — skip wildcards (multi-color) but include novas
+        if (tile && tile.color === chainColor && tile.special !== TILE_WILD) {
+          wipeTiles.push({ key, tile: { ...tile }, q: cell.q, r: cell.r });
+        }
       }
 
-      animating = false;
+      if (wipeTiles.length === 0) { finishChain(); return; }
+
+      // Float text notification (matches nova style)
+      spawnFloatText(centerX, centerY + 40, 'COLOR WIPE!', 18);
+
+      // Phase: Highlight all matching tiles for 700ms
+      const now2 = performance.now();
+      const highlightDur = 700;
+
+      wipeTiles.forEach((wt) => {
+        highlightAnims.set(wt.key, {
+          startTime: now2,
+          duration: highlightDur,
+          tile: wt.tile,
+        });
+      });
       requestRender();
-    }, 350);
+
+      // After highlight: remove tiles, clear animation, then gravity + refill
+      setTimeout(() => {
+        // Remove from board
+        wipeTiles.forEach((wt) => board.delete(wt.key));
+
+        // Slow clear animation (fade + shrink)
+        const now4 = performance.now();
+        wipeTiles.forEach((wt, i) => {
+          clearAnims.set(wt.key, {
+            startTime: now4 + i * 25,
+            duration: 450,
+            tile: wt.tile,
+          });
+          const cpx = axialToPixel(wt.q, wt.r, HEX_SIZE);
+          spawnParticles(centerX + cpx.x, centerY + cpx.y, wt.tile.color, 4);
+        });
+
+        // Add wipe bonus points
+        const wipeBonus = wipeTiles.length * 50;
+        score += wipeBonus;
+        totalCleared += wipeTiles.length;
+        $score.textContent = score;
+        spawnFloatText(centerX, centerY + 20, `+${wipeBonus}`, 16);
+        requestRender();
+
+        // After clear animations finish, gravity + refill for the wiped gaps
+        const wipeClearDuration = wipeTiles.length * 25 + 450 + 100;
+        setTimeout(() => {
+          applyGravity();
+          refillBoard();
+          finishChain();
+        }, wipeClearDuration);
+      }, highlightDur + 50);
+    }
+
+    // --- NOVA PHASE: highlight → disappear → gravity → then color wipe ---
+    if (novaTargetList.length > 0) {
+      const novaHighlightDur = 700;
+      const now3 = performance.now();
+
+      // Highlight nova targets for 700ms (tiles still on board, visible)
+      novaTargetList.forEach((nt) => {
+        highlightAnims.set(nt.key, {
+          startTime: now3,
+          duration: novaHighlightDur,
+          tile: nt.tile,
+        });
+      });
+      spawnFloatText(centerX, centerY + 40, `NOVA!`, 18);
+      requestRender();
+
+      // After highlight: remove tiles, clear animation, gravity, then color wipe
+      setTimeout(() => {
+        // Remove nova targets from board
+        novaTargetList.forEach((nt) => board.delete(nt.key));
+
+        // Clear animations
+        const now5 = performance.now();
+        novaTargetList.forEach((nt, i) => {
+          clearAnims.set(nt.key, {
+            startTime: now5 + i * 25,
+            duration: 400,
+            tile: nt.tile,
+          });
+          const cpx = axialToPixel(nt.q, nt.r, HEX_SIZE);
+          spawnParticles(centerX + cpx.x, centerY + cpx.y, nt.tile.color, 6);
+        });
+
+        const novaBonus = novaTargetList.length * 30;
+        score += novaBonus;
+        totalCleared += novaTargetList.length;
+        $score.textContent = score;
+        spawnFloatText(centerX, centerY + 60, `+${novaBonus}`, 16);
+        requestRender();
+
+        // After clear anims, gravity + refill, then proceed to color wipe
+        const novaClearDuration = novaTargetList.length * 25 + 400 + 100;
+        setTimeout(() => {
+          applyGravity();
+          refillBoard();
+
+          // Wait for gravity settle before color wipe phase
+          setTimeout(() => {
+            runColorWipePhase();
+          }, 500);
+        }, novaClearDuration);
+      }, novaHighlightDur + 50);
+    } else {
+      // No nova — go straight to gravity + refill, then color wipe
+      applyGravity();
+      refillBoard();
+
+      if (length >= 4) {
+        // Wait for gravity settle before starting color wipe phase
+        setTimeout(() => {
+          runColorWipePhase();
+        }, 500);
+      } else {
+        finishChain();
+      }
+    }
   }, totalDuration);
+}
+
+function getEffectiveFreezeAge() {
+  // After move 15, freeze age drops by 1 (tiles freeze faster)
+  if (movesMade >= 15) return FREEZE_AGE - 1;
+  return FREEZE_AGE;
 }
 
 function ageTiles(clearedPath) {
   if (gameMode === MODE_SPRINT) return; // no freezing in Sprint
   const clearedKeys = new Set(clearedPath.map(c => hexKey(c.q, c.r)));
+  const effectiveFreezeAge = getEffectiveFreezeAge();
   let newFreezes = 0;
   for (const cell of gridCells) {
     const key = hexKey(cell.q, cell.r);
     if (clearedKeys.has(key)) continue;
     const tile = board.get(key);
     if (!tile) continue;
-    if (tile.age >= FREEZE_AGE) continue; // already frozen
+    if (tile.special === TILE_WILD || tile.special === TILE_NOVA) continue; // special tiles never freeze
+    if (tile.age >= effectiveFreezeAge) continue; // already frozen
     tile.age++;
-    if (tile.age >= FREEZE_AGE) newFreezes++;
+    if (tile.age >= effectiveFreezeAge) newFreezes++;
   }
   if (newFreezes > 0 && newFreezes <= 3) {
     showToastMessage(newFreezes === 1 ? 'A tile froze!' : `${newFreezes} tiles froze!`);
+  }
+  // Notify player when difficulty increases
+  if (movesMade === 15) {
+    showToastMessage('Tiles are aging faster!');
   }
 }
 
@@ -2419,8 +2725,8 @@ function applyGravity() {
     const existing = settleAnims.get(destKey);
 
     settleAnims.set(destKey, {
-      startTime: now + move.pass * 70, // 70ms stagger per cascade pass
-      duration: 320,
+      startTime: now + move.pass * 120, // 120ms stagger per cascade pass (was 70)
+      duration: 550, // slower, more visible settle (was 320)
       startOffsetX: (existing ? existing.startOffsetX : 0) + (oldPixel.x - newPixel.x),
       startOffsetY: (existing ? existing.startOffsetY : 0) + (oldPixel.y - newPixel.y),
     });
@@ -2431,20 +2737,50 @@ function applyGravity() {
 function refillBoard() {
   const now = performance.now();
   let delay = 0;
+  const emptyCells = [];
 
   for (const cell of gridCells) {
     const key = hexKey(cell.q, cell.r);
     if (!board.has(key)) {
-      const color = Math.floor(rng() * numColors);
-      board.set(key, { color, age: 0 });
-
-      appearAnims.set(key, {
-        startTime: now + delay * 40,
-        duration: 280,
-      });
-      delay++;
+      emptyCells.push({ cell, key });
     }
   }
+
+  // Decide which empty cells get special tiles
+  let wildcardSlot = -1;
+  let novaSlot = -1;
+  // Wildcard: spawns every WILDCARD_INTERVAL moves (randomized 8-10)
+  if (movesSinceWildcard >= nextWildcardAt && emptyCells.length > 0) {
+    wildcardSlot = Math.floor(rng() * emptyCells.length);
+    movesSinceWildcard = 0;
+    nextWildcardAt = 8 + Math.floor(rng() * 3); // 8, 9, or 10
+  }
+
+  // Nova tile: earned from 5+ chain
+  if (pendingNovas > 0 && emptyCells.length > 0) {
+    do { novaSlot = Math.floor(rng() * emptyCells.length); }
+    while (novaSlot === wildcardSlot && emptyCells.length > 1);
+    pendingNovas--;
+  }
+
+  emptyCells.forEach(({ cell, key }, i) => {
+    const color = Math.floor(rng() * numColors);
+    const tile = { color, age: 0 };
+
+    if (i === wildcardSlot) {
+      tile.special = TILE_WILD;
+    } else if (i === novaSlot) {
+      tile.special = TILE_NOVA;
+    }
+
+    board.set(key, tile);
+    appearAnims.set(key, {
+      startTime: now + delay * 40,
+      duration: 280,
+    });
+    delay++;
+  });
+
   requestRender();
 }
 
@@ -2461,7 +2797,23 @@ function hasValidChains() {
 
     const tile = board.get(key);
     if (!tile) continue;
-    if (tile.age >= FREEZE_AGE) { visited.add(key); continue; } // skip frozen
+    if (tile.age >= getEffectiveFreezeAge()) { visited.add(key); continue; } // skip frozen
+
+    // Wildcards: try flood fill with each adjacent tile's color
+    if (tile.special === TILE_WILD) {
+      visited.add(key);
+      for (const d of AXIAL_DIRS) {
+        const nk = hexKey(cell.q + d.q, cell.r + d.r);
+        const nt = board.get(nk);
+        if (nt && nt.age < getEffectiveFreezeAge() && nt.special !== TILE_WILD) {
+          const testVisited = new Set(visited);
+          // Count wild tile + flood from neighbor
+          const size = 1 + floodFill(cell.q + d.q, cell.r + d.r, nt.color, testVisited);
+          if (size >= MIN_CHAIN) return true;
+        }
+      }
+      continue;
+    }
 
     const componentSize = floodFill(cell.q, cell.r, tile.color, visited);
     if (componentSize >= MIN_CHAIN) return true;
@@ -2475,8 +2827,10 @@ function floodFill(q, r, color, visited) {
   if (visited.has(key)) return 0;
   if (!gridSet.has(key)) return 0;
   const tile = board.get(key);
-  if (!tile || tile.color !== color) return 0;
-  if (tile.age >= FREEZE_AGE) return 0; // frozen tiles can't be chained
+  if (!tile) return 0;
+  if (tile.age >= getEffectiveFreezeAge()) return 0; // frozen tiles can't be chained
+  // Wildcards match any color; otherwise must match
+  if (tile.special !== TILE_WILD && tile.color !== color) return 0;
 
   visited.add(key);
   let count = 1;
@@ -2496,7 +2850,7 @@ function reshuffleBoard() {
     const key = hexKey(cell.q, cell.r);
     const tile = board.get(key);
     if (!tile) continue;
-    if (tile.age >= FREEZE_AGE) {
+    if (tile.age >= getEffectiveFreezeAge()) {
       frozenMap.set(key, tile);
     } else {
       freeTiles.push(tile);
@@ -2801,6 +3155,11 @@ function initGame(mode = MODE_CLASSIC) {
   reshufflesRemaining = MAX_RESHUFFLES;
   gameOver = false;
   movesMade = 0;
+  streakCount = 0;
+  streakMultiplier = 1;
+  movesSinceWildcard = 0;
+  nextWildcardAt = WILDCARD_INTERVAL;
+  pendingNovas = 0;
 
   // Reset timer
   stopSprintTimer();
@@ -2810,6 +3169,7 @@ function initGame(mode = MODE_CLASSIC) {
   clearAnims.clear();
   settleAnims.clear();
   appearAnims.clear();
+  highlightAnims.clear();
   particles.length = 0;
   floatTexts.length = 0;
 
@@ -2829,14 +3189,18 @@ function initGame(mode = MODE_CLASSIC) {
   // Mode-specific UI
   const $movesLabel = document.getElementById('moves-label');
   const $movesDisplay = document.getElementById('moves-display');
+  const $totalMovesDisplay = document.getElementById('total-moves-display');
+  $totalMoves.textContent = 0;
   if (mode === MODE_SPRINT) {
     $movesLabel.textContent = 'Time';
     $moves.textContent = SPRINT_TIME;
     $movesDisplay.classList.add('sprint-timer');
+    $totalMovesDisplay.style.display = 'none'; // hide moves counter in Sprint
   } else {
     $movesLabel.textContent = 'Chains';
     $moves.textContent = 0;
     $movesDisplay.classList.remove('sprint-timer');
+    $totalMovesDisplay.style.display = 'flex';
   }
 
   // Highlight active mode button
@@ -2880,6 +3244,8 @@ function hideStuckBanner() {
 function doReshuffle() {
   if (reshufflesRemaining <= 0 || animating || gameOver) return;
   reshufflesRemaining--;
+  streakCount = 0;
+  streakMultiplier = 1;
   hideStuckBanner();
   reshuffleBoard();
   updateReshuffleButton();
