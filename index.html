@@ -156,7 +156,7 @@
   }
 
   .score-block .value {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
@@ -350,6 +350,47 @@
     padding: 1px 5px;
     min-width: 16px;
     text-align: center;
+  }
+
+  /* ── Streak badge ── */
+  .streak-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,160,60,0.12);
+    border: 1.5px solid rgba(255,160,60,0.35);
+    border-radius: 10px;
+    padding: 4px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #FFA03C;
+    text-shadow: 0 0 8px rgba(255,160,60,0.4);
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+
+  .streak-badge.visible {
+    opacity: 1;
+    transform: scale(1);
+    animation: streakGlow 1.8s ease-in-out infinite;
+  }
+
+  .streak-badge .streak-fire {
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  .streak-badge .streak-value {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.5px;
+  }
+
+  @keyframes streakGlow {
+    0%, 100% { box-shadow: 0 0 6px rgba(255,160,60,0.15); border-color: rgba(255,160,60,0.35); }
+    50% { box-shadow: 0 0 14px rgba(255,160,60,0.3); border-color: rgba(255,160,60,0.55); }
   }
 
   /* ── Canvas ── */
@@ -945,6 +986,7 @@
       <div class="time-bonus" id="time-bonus"></div>
     </div>
     <div class="chain-info" id="chain-info"></div>
+    <div class="streak-badge" id="streak-badge"><span class="streak-fire">&#128293;</span><span class="streak-value" id="streak-value">2x</span></div>
     <button class="btn-reshuffle" id="btn-reshuffle" aria-label="Reshuffle board">
       <span class="reshuffle-icon">&#x21BB;</span><span class="reshuffle-label">Shuffle</span><span class="reshuffle-count" id="reshuffle-count">1</span>
     </button>
@@ -1020,7 +1062,7 @@
     </div>
     <div class="rule">
       <div class="rule-icon">&#x1F3C6;</div>
-      <div class="rule-text"><strong>4+ chain</strong> wipes that color! <strong>5+</strong> earns a Nova tile, <strong>7+</strong> earns Lightning! Keep a <strong>4+ streak</strong> going for score multipliers!</div>
+      <div class="rule-text"><strong>4+ chain</strong> wipes that color! <strong>6+</strong> resets that color's age, <strong>7+</strong> resets ALL tiles! Keep a <strong>5+ streak</strong> going for score multipliers!</div>
     </div>
     <button class="btn btn-primary" id="btn-tutorial-close">GOT IT</button>
   </div>
@@ -1229,9 +1271,18 @@ let gameStartTime = 0; // for duration tracking
 const MAX_RESHUFFLES = 1;
 let reshufflesRemaining = MAX_RESHUFFLES;
 
-// Streak multiplier: consecutive 4+ chains build a multiplier
-let streakCount = 0;      // how many consecutive 4+ chains
+// Streak multiplier: consecutive 5+ chains build a multiplier
+let streakCount = 0;      // how many consecutive 5+ chains
 let streakMultiplier = 1;  // current score multiplier
+
+function updateStreakBadge() {
+  if (streakCount >= 2) {
+    $streakValue.textContent = `${streakMultiplier}x`;
+    $streakBadge.classList.add('visible');
+  } else {
+    $streakBadge.classList.remove('visible');
+  }
+}
 
 // Wildcard spawn tracking
 let movesSinceWildcard = 0;
@@ -1276,6 +1327,8 @@ const $score = document.getElementById('score');
 const $highscore = document.getElementById('highscore');
 const $moves = document.getElementById('moves');
 const $chainInfo = document.getElementById('chain-info');
+const $streakBadge = document.getElementById('streak-badge');
+const $streakValue = document.getElementById('streak-value');
 const $overlay = document.getElementById('overlay');
 const $tutorial = document.getElementById('tutorial');
 const $toast = document.getElementById('toast');
@@ -2225,7 +2278,7 @@ function triggerClassicGameOver() {
   if (score > highScore) {
     highScore = score;
     saveHighScore(highScore);
-    $highscore.textContent = highScore;
+    $highscore.textContent = highScore.toLocaleString();
   }
   setTimeout(showGameOver, 800);
   requestRender();
@@ -2238,10 +2291,10 @@ function executeChain(path) {
   const length = path.length;
   const clearedColor = pathColor; // capture before onPointerUp resets it
 
-  // Streak multiplier: consecutive 4+ chains build it up
-  if (length >= 4) {
+  // Streak multiplier: consecutive 5+ chains build it up
+  if (length >= 5) {
     streakCount++;
-    streakMultiplier = 1 + (streakCount - 1) * 0.5; // 1x, 1.5x, 2x, 2.5x...
+    streakMultiplier = 1 + (streakCount - 1); // 1x, 2x, 3x, 4x...
     if (streakCount >= 2) {
       spawnFloatText(centerX, centerY - HEX_SIZE * 3.5, `${streakMultiplier}x STREAK!`, 16);
     }
@@ -2249,6 +2302,7 @@ function executeChain(path) {
     streakCount = 0;
     streakMultiplier = 1;
   }
+  updateStreakBadge();
 
   const basePoints = calculateScore(length);
   const points = Math.floor(basePoints * streakMultiplier);
@@ -2293,7 +2347,7 @@ function executeChain(path) {
   const isNewHigh = score > highScore && wasHighScore;
 
   // Update DOM
-  $score.textContent = score;
+  $score.textContent = score.toLocaleString();
   $score.classList.remove('score-pop');
   void $score.offsetWidth;
   $score.classList.add('score-pop');
@@ -2317,7 +2371,7 @@ function executeChain(path) {
   if (isNewHigh) {
     highScore = score;
     saveHighScore(highScore);
-    $highscore.textContent = highScore;
+    $highscore.textContent = highScore.toLocaleString();
     $highscore.classList.remove('new-high-score');
     void $highscore.offsetWidth;
     $highscore.classList.add('new-high-score');
@@ -2326,7 +2380,7 @@ function executeChain(path) {
     // Keep updating best as score climbs
     highScore = score;
     saveHighScore(highScore);
-    $highscore.textContent = highScore;
+    $highscore.textContent = highScore.toLocaleString();
   }
 
   // Chain tier feedback — always show for chains of 3+
@@ -2334,7 +2388,7 @@ function executeChain(path) {
   $chainInfo.className = 'chain-info active' + (tier.tier ? ` tier-${tier.tier}` : '');
   const bonusText = (gameMode === MODE_SPRINT && getTimeBonus(length) > 0) ? ` \u00b7 +${getTimeBonus(length)}s` : '';
   const streakText = streakMultiplier > 1 ? ` \u00b7 ${streakMultiplier}x` : '';
-  $chainInfo.innerHTML = `${tier.label}<span class="chain-label">${length} chain \u00b7 +${points}${streakText}${bonusText}</span>`;
+  $chainInfo.innerHTML = `${tier.label}<span class="chain-label">${length} chain \u00b7 +${points.toLocaleString()}${streakText}${bonusText}</span>`;
   clearTimeout(chainInfoTimeout);
   chainInfoTimeout = setTimeout(() => {
     $chainInfo.className = 'chain-info';
@@ -2573,7 +2627,7 @@ function executeChain(path) {
         const wipeBonus = wipeTiles.length * 50;
         score += wipeBonus;
         totalCleared += wipeTiles.length;
-        $score.textContent = score;
+        $score.textContent = score.toLocaleString();
         spawnFloatText(centerX, centerY + 20, `+${wipeBonus}`, 16);
         requestRender();
 
@@ -2623,7 +2677,7 @@ function executeChain(path) {
         const novaBonus = novaTargetList.length * 30;
         score += novaBonus;
         totalCleared += novaTargetList.length;
-        $score.textContent = score;
+        $score.textContent = score.toLocaleString();
         spawnFloatText(centerX, centerY + 60, `+${novaBonus}`, 16);
         requestRender();
 
@@ -2657,7 +2711,9 @@ function executeChain(path) {
 }
 
 function getEffectiveFreezeAge() {
-  // After move 15, freeze age drops by 1 (tiles freeze faster)
+  // Progressive difficulty: freeze age drops at moves 15, 30, and 50
+  if (movesMade >= 50) return FREEZE_AGE - 3;
+  if (movesMade >= 30) return FREEZE_AGE - 2;
   if (movesMade >= 15) return FREEZE_AGE - 1;
   return FREEZE_AGE;
 }
@@ -2681,7 +2737,7 @@ function ageTiles(clearedPath) {
     showToastMessage(newFreezes === 1 ? 'A tile froze!' : `${newFreezes} tiles froze!`);
   }
   // Notify player when difficulty increases
-  if (movesMade === 15) {
+  if (movesMade === 15 || movesMade === 30 || movesMade === 50) {
     showToastMessage('Tiles are aging faster!');
   }
 }
@@ -2921,7 +2977,7 @@ const GAME_OVER_PHRASES = [
 function showGameOver() {
   const phrase = GAME_OVER_PHRASES[Math.floor(Math.random() * GAME_OVER_PHRASES.length)];
   document.querySelector('#overlay h2').textContent = phrase;
-  document.getElementById('final-score').textContent = score;
+  document.getElementById('final-score').textContent = score.toLocaleString();
   document.getElementById('stat-cleared').textContent = totalCleared;
   document.getElementById('stat-chain').textContent = bestChain;
   document.getElementById('stat-moves').textContent = movesMade;
@@ -3015,7 +3071,7 @@ function tickTimer() {
     if (score > highScore) {
       highScore = score;
       saveHighScore(highScore);
-      $highscore.textContent = highScore;
+      $highscore.textContent = highScore.toLocaleString();
     }
     setTimeout(showGameOver, 800);
   }
@@ -3190,6 +3246,7 @@ function initGame(mode = MODE_CLASSIC) {
   movesMade = 0;
   streakCount = 0;
   streakMultiplier = 1;
+  updateStreakBadge();
   movesSinceWildcard = 0;
   nextWildcardAt = WILDCARD_INTERVAL;
   pendingNovas = 0;
@@ -3217,7 +3274,7 @@ function initGame(mode = MODE_CLASSIC) {
 
   // Update DOM
   $score.textContent = 0;
-  $highscore.textContent = highScore;
+  $highscore.textContent = highScore.toLocaleString();
 
   // Mode-specific UI
   const $movesLabel = document.getElementById('moves-label');
@@ -3275,6 +3332,7 @@ function doReshuffle() {
   reshufflesRemaining--;
   streakCount = 0;
   streakMultiplier = 1;
+  updateStreakBadge();
   hideStuckBanner();
   reshuffleBoard();
   updateReshuffleButton();

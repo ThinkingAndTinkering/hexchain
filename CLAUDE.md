@@ -16,7 +16,7 @@ Browser-based mobile puzzle game. Single HTML file, no frameworks, no build step
 ## Game Mechanics
 - Draw paths through adjacent same-colored hex tiles (min chain: 3)
 - Tiles clear along the path with staggered animation, gravity pulls tiles down diagonally (plinko-style), new tiles fill gaps
-- **Freeze mechanic** (Classic only): Each tile has an `age` counter. Base freeze age is 7 moves. After move 15, effective freeze age drops to 6 (progressive difficulty). Countdown numbers (3, 2, 1) show on tiles approaching freeze. Pulsing colored border on tiles 1 move from freezing. Toast notification at move 15 warns "Tiles are aging faster!"
+- **Freeze mechanic** (Classic only): Each tile has an `age` counter. Base freeze age is 7 moves. Progressive difficulty: freeze age drops to 6 at move 15, to 5 at move 30, to 4 at move 50. Countdown numbers (3, 2, 1) show on tiles approaching freeze. Pulsing colored border on tiles 1 move from freezing. Toast notification at each difficulty increase warns "Tiles are aging faster!"
 - **Chain reward tiers (v3) — sequential multi-phase animation**:
   - **4+ chain → Color Wipe**: Chain clears first (gravity + refill). THEN after 500ms pause, remaining tiles of that color get highlighted (700ms subtle glow), then slowly fade/shrink away, then gravity + refill fills those gaps. Bonus points (50 per wiped tile), float text "COLOR WIPE!" (matches nova style). Frozen tiles of that color ARE included in wipe. Wildcard tiles are NEVER wiped. Nova tiles of matching color ARE wiped.
   - **6+ chain → Color Wipe + Same-Color Reset** (Classic only): All tiles of that color get age reset to 0
@@ -28,7 +28,7 @@ Browser-based mobile puzzle game. Single HTML file, no frameworks, no build step
 - **Lightning tile**: REMOVED (was too confusing with wildcard + nova)
 
 ### Other Mechanics
-- **Streak multiplier**: Consecutive 4+ chains build a score multiplier: 1x → 1.5x → 2x → 2.5x... Resets on a 3-chain or reshuffle. "Nx STREAK!" float text shown. Multiplier displayed in chain info bar.
+- **Streak multiplier**: Consecutive 5+ chains build a score multiplier: 1x → 2x → 3x → 4x... (whole number steps). Resets on a sub-5 chain or reshuffle. "Nx STREAK!" float text shown. Multiplier displayed in chain info bar.
 - **Manual reshuffle**: 1 reshuffle per game (reduced from 2). Button in info bar with ↻ icon + count. When no valid chains exist, reshuffle button pulses and persistent red "NO MORE MOVES" banner shows. Resets streak.
 - **Classic mode**: Unlimited moves, 6 colors. Frozen tiles cause board lockup. No timer. Shows Chains counter.
 - **Sprint mode**: 45-second timer, 6 colors, NO freezing. Timer starts on first chain. Long chains earn bonus time: 4-chain +1s, 5-chain +2s, 6-chain +3s, 7+ chain +5s.
@@ -104,7 +104,7 @@ const SCORE_TABLE = { 3: 150, 4: 400, 5: 850, 6: 1500, 7: 2500, 8: 4000, 9: 6500
 - **v2 chain tiers**: 4+ color wipe, 5+ same-color reset (age → 0), 6+ global reset (age → 0)
 - **v3 chain tiers (current)**: 4+ color wipe (highlight-then-clear), 6+ same-color reset, 7+ global reset
 - **Special tiles added**: Wildcard (6-color hex, every 8-10 moves), Nova (gold, earned after 5+ chain). Lightning removed.
-- **Balance changes**: FREEZE_AGE 8→7, reshuffles 2→1, progressive difficulty at move 15, streak multiplier for 4+ chains, Sprint time bonuses halved
+- **Balance changes**: FREEZE_AGE 8→7, reshuffles 2→1, progressive difficulty at moves 15/30/50, streak multiplier for 5+ chains, Sprint time bonuses halved
 - **Color wipe rework**: Changed from simultaneous to sequential multi-phase (chain clear → gravity → pause → highlight → slow fade → gravity). Reduced highlight brightness. Frozen tiles included in wipe. Special tiles (wildcard/nova) protected from wipe and freezing.
 - **Nova + color wipe sequential flow**: Nova highlight (700ms) → disappear → gravity → color wipe highlight (700ms) → disappear → gravity. Each phase fully completes before the next begins.
 - **Nova visual redesign**: Removed yellow pulsating sun icon. Now uses bold diagonal white stripes (55% opacity) clipped to hex + prominent pulsating white border (2.5px).
