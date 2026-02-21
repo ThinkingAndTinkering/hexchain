@@ -57,7 +57,16 @@ Target ranges: fast game 5-10K, good game 10-30K, great game high 5 digits.
 - **Helper**: `track(event, props)` wraps `posthog.capture()` with try/catch
 
 ## Storage
-- localStorage for high scores per mode, tutorial seen flag, leaderboard (top 100 entries with timestamps, filtered by mode Classic/Sprint + period today/month/all-time for display)
+- localStorage for high scores per mode, tutorial seen flag, leaderboard (top 100 entries with timestamps, filtered by mode Classic/Sprint + period today/month/all-time for display), sound preference (`hexchain-sound`)
+
+## Audio & Haptics
+- **Audio engine**: Web Audio API for SFX (fully synthesized, no audio files). HTML5 Audio for background music (`background-music.mp3`).
+- **Default OFF** — no AudioContext created until user taps sound button. Setting persisted in localStorage.
+- **Sound toggle**: 🔊/🔇 button in header bar (below title). Lazy-inits AudioContext on first user gesture (browser autoplay policy).
+- **SFX** (12 effects): tile select (ascending blips), path reject (low buzz), chain clear (pentatonic ascending per tile), score pop (bright pluck), streak activation (rising filtered sweep), new high score (major chord arpeggio), tile freeze (crack + noise), difficulty increase (ominous minor 2nd), game over (descending phrase), color wipe (noise whoosh), reshuffle (random pitch flurry), timer tick (urgent clicks when ≤10s)
+- **Background music**: `background-music.mp3` — loops via HTML5 Audio element, volume 0.3. Replace the file to change the music.
+- **Haptic vibration**: `navigator.vibrate()` wrapper — Android only, silently ignored on iOS. Short pulses on chain clears, buzz on game over, patterns for color wipe/high score/freeze/streak.
+- **Node graph**: Oscillators → per-voice GainNode → sfxGain (0.7) → masterGain (1.0) → destination.
 
 ## Visual Design
 - Premium dark theme: `--bg-dark: #141419`, radial gradient background
@@ -110,6 +119,7 @@ const SCORE_TABLE = { 3: 150, 4: 400, 5: 850, 6: 1500, 7: 2500, 8: 4000, 9: 6500
 - **Nova visual redesign**: Removed yellow pulsating sun icon. Now uses bold diagonal white stripes (55% opacity) clipped to hex + prominent pulsating white border (2.5px).
 - **Gravity animation slowed**: Settle duration 320ms→550ms, cascade stagger 70ms→120ms per pass. More visible plinko-style movement.
 - **Color wipe notification**: Uses float text ("COLOR WIPE!") matching nova style. Both effects use same notification approach.
+- **Audio + haptics added**: 12 synthesized SFX (Web Audio API), procedural ambient music (3 oscillators + LFO filter sweep), haptic vibration (Android). Sound toggle in header, default OFF, persisted in localStorage.
 
 ## Hosting
 - GitHub repo: `ThinkingAndTinkering/hexchain`

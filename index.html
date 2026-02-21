@@ -89,35 +89,44 @@
   /* ── Header ── */
   .header {
     display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    gap: 6px;
+  }
+
+  .header-title-row {
+    text-align: center;
+  }
+
+  .header-bar {
+    display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-shrink: 0;
   }
 
   .header-left {
     display: flex;
     align-items: center;
-    gap: 8px;
-    min-width: 0;
+    gap: 6px;
   }
 
   .title {
-    font-size: 16px;
+    font-size: 22px;
     font-weight: 700;
-    letter-spacing: 4px;
+    letter-spacing: 6px;
     color: var(--accent);
     text-shadow: 0 0 20px var(--accent-glow);
     white-space: nowrap;
   }
 
   .btn-help {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     border: 1.5px solid var(--text-dim);
     background: transparent;
     color: var(--text-dim);
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
@@ -156,13 +165,19 @@
   }
 
   .score-block .value {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
 
   /* ── Info bar ── */
+  .info-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .info-bar {
     display: flex;
     justify-content: space-between;
@@ -180,7 +195,7 @@
   }
 
   .moves-display label {
-    font-size: 9px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 1.5px;
     color: var(--text-dim);
@@ -188,7 +203,7 @@
   }
 
   .moves-display .moves-value {
-    font-size: 18px;
+    font-size: 22px;
     font-weight: 700;
     color: var(--text);
     font-variant-numeric: tabular-nums;
@@ -215,8 +230,11 @@
     opacity: 0;
     transition: opacity 0.2s ease;
     text-shadow: 0 0 12px var(--accent-glow);
-    text-align: right;
+    text-align: center;
     line-height: 1.2;
+    height: 34px;
+    flex-shrink: 0;
+    pointer-events: none;
   }
 
   .chain-info.active {
@@ -867,12 +885,12 @@
   }
 
   .btn-trophy {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     border: none;
     background: transparent;
-    font-size: 16px;
+    font-size: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -887,6 +905,27 @@
   .btn-trophy:active {
     opacity: 1;
   }
+
+  .btn-sound {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+    padding: 0;
+    opacity: 0.35;
+    transition: opacity 0.15s;
+  }
+
+  .btn-sound:active { opacity: 1; }
+  .btn-sound.sound-on { opacity: 0.7; }
 
   /* ── Stuck banner (persistent, above bottom bar) ── */
   .stuck-banner {
@@ -958,19 +997,24 @@
 
 <div id="game">
   <div class="header">
-    <div class="header-left">
+    <div class="header-title-row">
       <div class="title">HEX CHAIN</div>
-      <button class="btn-trophy" id="btn-trophy" aria-label="Leaderboard">&#127942;</button>
-      <button class="btn-help" id="btn-help" aria-label="How to play">?</button>
     </div>
-    <div class="scores">
-      <div class="score-block">
-        <label>Score</label>
-        <div class="value" id="score">0</div>
+    <div class="header-bar">
+      <div class="header-left">
+        <button class="btn-trophy" id="btn-trophy" aria-label="High Scores">&#127942;</button>
+        <button class="btn-help" id="btn-help" aria-label="How to play">?</button>
+        <button class="btn-sound" id="btn-sound" aria-label="Toggle sound">&#128263;</button>
       </div>
-      <div class="score-block">
-        <label>Best</label>
-        <div class="value" id="highscore">0</div>
+      <div class="scores">
+        <div class="score-block">
+          <label>Score</label>
+          <div class="value" id="score">0</div>
+        </div>
+        <div class="score-block">
+          <label>Best</label>
+          <div class="value" id="highscore">0</div>
+        </div>
       </div>
     </div>
   </div>
@@ -985,12 +1029,15 @@
       <div class="moves-value" id="moves">0</div>
       <div class="time-bonus" id="time-bonus"></div>
     </div>
-    <div class="chain-info" id="chain-info"></div>
-    <div class="streak-badge" id="streak-badge"><span class="streak-fire">&#128293;</span><span class="streak-value" id="streak-value">2x</span></div>
-    <button class="btn-reshuffle" id="btn-reshuffle" aria-label="Reshuffle board">
+    <div class="info-bar-right">
+      <div class="streak-badge" id="streak-badge"><span class="streak-fire">&#128293;</span><span class="streak-value" id="streak-value">2x</span></div>
+      <button class="btn-reshuffle" id="btn-reshuffle" aria-label="Reshuffle board">
       <span class="reshuffle-icon">&#x21BB;</span><span class="reshuffle-label">Shuffle</span><span class="reshuffle-count" id="reshuffle-count">1</span>
     </button>
+    </div>
   </div>
+
+  <div class="chain-info" id="chain-info"></div>
 
   <div class="canvas-container" id="canvas-container">
     <canvas id="hexcanvas"></canvas>
@@ -1071,7 +1118,7 @@
 <!-- Leaderboard -->
 <div class="leaderboard" id="leaderboard">
   <div class="leaderboard-content">
-    <h2>LEADERBOARD</h2>
+    <h2>HIGH SCORES</h2>
     <div class="lb-mode-tabs">
       <button class="lb-mode-tab active" data-lb-mode="classic">Classic</button>
       <button class="lb-mode-tab" data-lb-mode="sprint">Sprint</button>
@@ -1281,6 +1328,293 @@ function updateStreakBadge() {
     $streakBadge.classList.add('visible');
   } else {
     $streakBadge.classList.remove('visible');
+  }
+}
+
+// ═══════════════════════════════════════════
+// AUDIO ENGINE
+// ═══════════════════════════════════════════
+let audioCtx = null;
+let masterGain = null;
+let musicGain = null;
+let sfxGain = null;
+let soundEnabled = false;
+let audioInitialized = false;
+const SOUND_STORAGE_KEY = 'hexchain-sound';
+
+function initAudio() {
+  if (audioInitialized) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 1.0;
+    masterGain.connect(audioCtx.destination);
+    sfxGain = audioCtx.createGain();
+    sfxGain.gain.value = 0.7;
+    sfxGain.connect(masterGain);
+    musicGain = audioCtx.createGain();
+    musicGain.gain.value = 0.08;
+    musicGain.connect(masterGain);
+    audioInitialized = true;
+  } catch (e) {
+    console.warn('Web Audio API not available');
+    soundEnabled = false;
+  }
+}
+
+function resumeAudio() {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+// ── SFX helpers ──
+function playSineEnv(freq, duration, volume = 0.3, type = 'sine') {
+  if (!soundEnabled || !audioCtx) return;
+  const t = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(volume, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+  osc.connect(gain);
+  gain.connect(sfxGain);
+  osc.start(t);
+  osc.stop(t + duration);
+}
+
+function playNoise(duration, volume = 0.1, filterFreq = 2000) {
+  if (!soundEnabled || !audioCtx) return;
+  const t = audioCtx.currentTime;
+  const bufferSize = Math.floor(audioCtx.sampleRate * duration);
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = filterFreq;
+  filter.Q.value = 1;
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(volume, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(sfxGain);
+  source.start(t);
+}
+
+// ── SFX functions ──
+function sfxTileSelect(pathLength) {
+  if (!soundEnabled || !audioCtx) return;
+  const freq = 600 + pathLength * 40;
+  playSineEnv(freq, 0.04, 0.08, 'triangle');
+}
+
+function sfxPathReject() {
+  if (!soundEnabled || !audioCtx) return;
+  playSineEnv(150, 0.15, 0.08, 'square');
+  playSineEnv(157, 0.15, 0.08, 'square');
+}
+
+function sfxChainClear(chainLength, index) {
+  if (!soundEnabled || !audioCtx) return;
+  const semitones = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
+  const st = semitones[Math.min(index, semitones.length - 1)];
+  const freq = 440 * Math.pow(2, st / 12);
+  const vol = 0.12 + (index / chainLength) * 0.08;
+  playSineEnv(freq, 0.25, Math.min(vol, 0.25), 'sine');
+}
+
+function sfxScorePop() {
+  if (!soundEnabled || !audioCtx) return;
+  playSineEnv(880, 0.12, 0.08, 'sine');
+  playSineEnv(1320, 0.1, 0.05, 'triangle');
+}
+
+function sfxStreakActivation(level) {
+  if (!soundEnabled || !audioCtx) return;
+  const t = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(200, t);
+  osc.frequency.exponentialRampToValueAtTime(800 + level * 200, t + 0.3);
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(400, t);
+  filter.frequency.exponentialRampToValueAtTime(3000, t + 0.3);
+  gain.gain.setValueAtTime(0.1, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(sfxGain);
+  osc.start(t);
+  osc.stop(t + 0.4);
+}
+
+function sfxNewHighScore() {
+  if (!soundEnabled || !audioCtx) return;
+  const notes = [523.25, 659.25, 783.99, 1046.5];
+  notes.forEach((freq, i) => {
+    setTimeout(() => playSineEnv(freq, 0.5, 0.15, 'triangle'), i * 120);
+  });
+}
+
+function sfxTileFreeze() {
+  if (!soundEnabled || !audioCtx) return;
+  const t = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(4000, t);
+  osc.frequency.exponentialRampToValueAtTime(800, t + 0.15);
+  gain.gain.setValueAtTime(0.12, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+  osc.connect(gain);
+  gain.connect(sfxGain);
+  osc.start(t);
+  osc.stop(t + 0.25);
+  playNoise(0.12, 0.06, 3000);
+}
+
+function sfxDifficultyIncrease() {
+  if (!soundEnabled || !audioCtx) return;
+  const t = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+  osc.type = 'square';
+  filter.type = 'lowpass';
+  filter.frequency.value = 600;
+  osc.frequency.setValueAtTime(329.63, t);
+  osc.frequency.setValueAtTime(311.13, t + 0.3);
+  gain.gain.setValueAtTime(0.08, t);
+  gain.gain.setValueAtTime(0.08, t + 0.5);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(sfxGain);
+  osc.start(t);
+  osc.stop(t + 0.85);
+}
+
+function sfxGameOver() {
+  if (!soundEnabled || !audioCtx) return;
+  [493.88, 440, 349.23, 293.66].forEach((freq, i) => {
+    setTimeout(() => playSineEnv(freq, 0.6, 0.12, 'square'), i * 200);
+  });
+}
+
+function sfxColorWipe() {
+  if (!soundEnabled || !audioCtx) return;
+  const t = audioCtx.currentTime;
+  const bufferSize = Math.floor(audioCtx.sampleRate * 0.6);
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.Q.value = 2;
+  filter.frequency.setValueAtTime(300, t);
+  filter.frequency.exponentialRampToValueAtTime(4000, t + 0.25);
+  filter.frequency.exponentialRampToValueAtTime(500, t + 0.6);
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.12, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(sfxGain);
+  source.start(t);
+}
+
+function sfxReshuffle() {
+  if (!soundEnabled || !audioCtx) return;
+  for (let i = 0; i < 8; i++) {
+    setTimeout(() => {
+      const freq = 300 + Math.random() * 600;
+      playSineEnv(freq, 0.06, 0.06, 'triangle');
+    }, i * 35);
+  }
+}
+
+let lastTickSec = -1;
+function sfxTimerTick(secs) {
+  if (!soundEnabled || !audioCtx) return;
+  if (secs === lastTickSec) return;
+  lastTickSec = secs;
+  const urgency = Math.max(0.04, 0.12 - secs * 0.008);
+  playSineEnv(1200, 0.05, urgency, 'sine');
+}
+
+// ── Background music (MP3) ──
+let bgMusic = null;
+let musicPlaying = false;
+const MUSIC_VOLUME = 0.3;
+
+function startAmbientMusic() {
+  if (musicPlaying) return;
+  if (!bgMusic) {
+    bgMusic = new Audio('background-music.mp3');
+    bgMusic.loop = true;
+    bgMusic.volume = MUSIC_VOLUME;
+  }
+  bgMusic.play().then(() => { musicPlaying = true; }).catch(() => {});
+}
+
+function stopAmbientMusic() {
+  musicPlaying = false;
+  if (bgMusic) {
+    bgMusic.pause();
+    bgMusic.currentTime = 0;
+  }
+}
+
+// ── Haptics ──
+function haptic(pattern) {
+  if (!soundEnabled) return;
+  if (navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
+}
+function hapticTileSelect() { haptic(10); }
+function hapticPathReject() { haptic([20, 10, 20]); }
+function hapticChainClear(len) { haptic(Math.min(50 + len * 15, 150)); }
+function hapticStreakActivation() { haptic([30, 20, 50]); }
+function hapticNewHighScore() { haptic([50, 50, 50, 50, 100]); }
+function hapticTileFreeze() { haptic([30, 20, 30]); }
+function hapticColorWipe() { haptic([50, 30, 50]); }
+function hapticGameOver() { haptic(200); }
+function hapticTimerTick() { haptic(15); }
+
+// ── Sound toggle ──
+function loadSoundSetting() {
+  try { return localStorage.getItem(SOUND_STORAGE_KEY) === '1'; } catch { return false; }
+}
+function saveSoundSetting(val) {
+  try { localStorage.setItem(SOUND_STORAGE_KEY, val ? '1' : '0'); } catch {}
+}
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  saveSoundSetting(soundEnabled);
+  updateSoundButton();
+  if (soundEnabled) {
+    initAudio();
+    resumeAudio();
+    startAmbientMusic();
+    playSineEnv(880, 0.1, 0.08, 'sine');
+  } else {
+    stopAmbientMusic();
+  }
+}
+function updateSoundButton() {
+  const $btn = document.getElementById('btn-sound');
+  if (soundEnabled) {
+    $btn.innerHTML = '&#128266;';
+    $btn.classList.add('sound-on');
+  } else {
+    $btn.innerHTML = '&#128263;';
+    $btn.classList.remove('sound-on');
   }
 }
 
@@ -2171,6 +2505,13 @@ function onPointerDown(e) {
   if (gameOver || animating) return;
   e.preventDefault();
 
+  // Lazy-init audio on first gesture if sound was previously enabled
+  if (soundEnabled && !audioInitialized) {
+    initAudio();
+    resumeAudio();
+    startAmbientMusic();
+  }
+
   // Check if board is stuck (e.g. too many frozen tiles)
   if (!hasValidChains()) {
     if (reshufflesRemaining <= 0) {
@@ -2192,6 +2533,8 @@ function onPointerDown(e) {
   // Wildcard tiles adopt the color of the next tile added to the path
   pathColor = startTile.special === TILE_WILD ? -1 : startTile.color;
   currentPath = [{ q: axial.q, r: axial.r }];
+  sfxTileSelect(1);
+  hapticTileSelect();
 
   canvas.setPointerCapture(e.pointerId);
   requestRender();
@@ -2240,6 +2583,8 @@ function onPointerMove(e) {
   if (currentPath.some(c => c.q === axial.q && c.r === axial.r)) return;
 
   currentPath.push({ q: axial.q, r: axial.r });
+  sfxTileSelect(currentPath.length);
+  hapticTileSelect();
   requestRender();
 }
 
@@ -2249,6 +2594,9 @@ function onPointerUp(e) {
 
   if (currentPath.length >= MIN_CHAIN) {
     executeChain(currentPath.slice());
+  } else if (currentPath.length > 0) {
+    sfxPathReject();
+    hapticPathReject();
   }
 
   currentPath = [];
@@ -2275,6 +2623,8 @@ function triggerClassicGameOver() {
   if (gameOver) return;
   gameOver = true;
   stopSprintTimer();
+  sfxGameOver();
+  hapticGameOver();
   if (score > highScore) {
     highScore = score;
     saveHighScore(highScore);
@@ -2297,6 +2647,8 @@ function executeChain(path) {
     streakMultiplier = 1 + (streakCount - 1); // 1x, 2x, 3x, 4x...
     if (streakCount >= 2) {
       spawnFloatText(centerX, centerY - HEX_SIZE * 3.5, `${streakMultiplier}x STREAK!`, 16);
+      sfxStreakActivation(streakMultiplier);
+      hapticStreakActivation();
     }
   } else {
     streakCount = 0;
@@ -2348,6 +2700,7 @@ function executeChain(path) {
 
   // Update DOM
   $score.textContent = score.toLocaleString();
+  sfxScorePop();
   $score.classList.remove('score-pop');
   void $score.offsetWidth;
   $score.classList.add('score-pop');
@@ -2376,6 +2729,8 @@ function executeChain(path) {
     void $highscore.offsetWidth;
     $highscore.classList.add('new-high-score');
     spawnConfetti();
+    sfxNewHighScore();
+    hapticNewHighScore();
   } else if (score > highScore) {
     // Keep updating best as score climbs
     highScore = score;
@@ -2414,10 +2769,12 @@ function executeChain(path) {
       tile: { ...tile },
     });
 
-    // Spawn particles at each cell with stagger
+    // Spawn particles + SFX at each cell with stagger
     setTimeout(() => {
       const pixel = axialToPixel(cell.q, cell.r, HEX_SIZE);
       spawnParticles(centerX + pixel.x, centerY + pixel.y, tile.color, 6);
+      sfxChainClear(length, i);
+      if (i === 0) hapticChainClear(length);
     }, i * staggerDelay + cellDuration * 0.3);
   });
 
@@ -2592,6 +2949,8 @@ function executeChain(path) {
 
       // Float text notification (matches nova style)
       spawnFloatText(centerX, centerY + 40, 'COLOR WIPE!', 18);
+      sfxColorWipe();
+      hapticColorWipe();
 
       // Phase: Highlight all matching tiles for 700ms
       const now2 = performance.now();
@@ -2734,10 +3093,13 @@ function ageTiles(clearedPath) {
     if (tile.age >= effectiveFreezeAge) newFreezes++;
   }
   if (newFreezes > 0 && newFreezes <= 3) {
+    sfxTileFreeze();
+    hapticTileFreeze();
     showToastMessage(newFreezes === 1 ? 'A tile froze!' : `${newFreezes} tiles froze!`);
   }
   // Notify player when difficulty increases
   if (movesMade === 15 || movesMade === 30 || movesMade === 50) {
+    sfxDifficultyIncrease();
     showToastMessage('Tiles are aging faster!');
   }
 }
@@ -2923,6 +3285,7 @@ function floodFill(q, r, color, visited) {
 }
 
 function reshuffleBoard() {
+  sfxReshuffle();
   // Only shuffle non-frozen tiles; frozen tiles stay in place
   const frozenMap = new Map(); // key -> tile (frozen)
   const freeTiles = [];
@@ -3068,6 +3431,8 @@ function tickTimer() {
   if (sprintTimeLeft <= 0) {
     stopSprintTimer();
     gameOver = true;
+    sfxGameOver();
+    hapticGameOver();
     if (score > highScore) {
       highScore = score;
       saveHighScore(highScore);
@@ -3082,6 +3447,8 @@ function updateTimerDisplay() {
   $moves.textContent = secs;
   if (secs <= 10) {
     $moves.classList.add('timer-low');
+    sfxTimerTick(secs);
+    hapticTimerTick();
   } else {
     $moves.classList.remove('timer-low');
   }
@@ -3247,6 +3614,7 @@ function initGame(mode = MODE_CLASSIC) {
   streakCount = 0;
   streakMultiplier = 1;
   updateStreakBadge();
+  lastTickSec = -1;
   movesSinceWildcard = 0;
   nextWildcardAt = WILDCARD_INTERVAL;
   pendingNovas = 0;
@@ -3370,6 +3738,7 @@ document.getElementById('btn-tutorial-close').addEventListener('click', () => {
 });
 document.getElementById('btn-reshuffle').addEventListener('click', doReshuffle);
 document.getElementById('btn-trophy').addEventListener('click', showLeaderboard);
+document.getElementById('btn-sound').addEventListener('click', toggleSound);
 document.getElementById('btn-overlay-lb').addEventListener('click', showLeaderboard);
 document.getElementById('btn-lb-close').addEventListener('click', hideLeaderboard);
 document.querySelectorAll('.lb-tab').forEach(tab => {
@@ -3422,6 +3791,10 @@ window.addEventListener('load', () => {
   initAmbientParticles();
   requestRender();
 });
+
+// Load sound preference
+soundEnabled = loadSoundSetting();
+updateSoundButton();
 
 if (!hasSeenTutorial()) {
   $tutorial.classList.add('visible');
