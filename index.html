@@ -1004,7 +1004,8 @@
       <div class="header-left">
         <button class="btn-trophy" id="btn-trophy" aria-label="High Scores">&#127942;</button>
         <button class="btn-help" id="btn-help" aria-label="How to play">?</button>
-        <button class="btn-sound" id="btn-sound" aria-label="Toggle sound">&#128263;</button>
+        <button class="btn-sound" id="btn-sfx" aria-label="Toggle sound effects">&#128263;</button>
+      <button class="btn-sound" id="btn-music" aria-label="Toggle music">&#127925;</button>
       </div>
       <div class="scores">
         <div class="score-block">
@@ -1338,9 +1339,11 @@ let audioCtx = null;
 let masterGain = null;
 let musicGain = null;
 let sfxGain = null;
-let soundEnabled = false;
+let soundEnabled = false;  // SFX + haptics
+let musicEnabled = false;  // background music
 let audioInitialized = false;
 const SOUND_STORAGE_KEY = 'hexchain-sound';
+const MUSIC_STORAGE_KEY = 'hexchain-music';
 
 function initAudio() {
   if (audioInitialized) return;
@@ -1587,33 +1590,48 @@ function hapticColorWipe() { haptic([50, 30, 50]); }
 function hapticGameOver() { haptic(200); }
 function hapticTimerTick() { haptic(15); }
 
-// ── Sound toggle ──
-function loadSoundSetting() {
-  try { return localStorage.getItem(SOUND_STORAGE_KEY) === '1'; } catch { return false; }
+// ── Sound toggles ──
+function loadSetting(key) {
+  try { return localStorage.getItem(key) === '1'; } catch { return false; }
 }
-function saveSoundSetting(val) {
-  try { localStorage.setItem(SOUND_STORAGE_KEY, val ? '1' : '0'); } catch {}
+function saveSetting(key, val) {
+  try { localStorage.setItem(key, val ? '1' : '0'); } catch {}
 }
-function toggleSound() {
+function toggleSfx() {
   soundEnabled = !soundEnabled;
-  saveSoundSetting(soundEnabled);
-  updateSoundButton();
+  saveSetting(SOUND_STORAGE_KEY, soundEnabled);
+  updateSfxButton();
   if (soundEnabled) {
     initAudio();
     resumeAudio();
-    startAmbientMusic();
     playSineEnv(880, 0.1, 0.08, 'sine');
+  }
+}
+function toggleMusic() {
+  musicEnabled = !musicEnabled;
+  saveSetting(MUSIC_STORAGE_KEY, musicEnabled);
+  updateMusicButton();
+  if (musicEnabled) {
+    startAmbientMusic();
   } else {
     stopAmbientMusic();
   }
 }
-function updateSoundButton() {
-  const $btn = document.getElementById('btn-sound');
+function updateSfxButton() {
+  const $btn = document.getElementById('btn-sfx');
   if (soundEnabled) {
     $btn.innerHTML = '&#128266;';
     $btn.classList.add('sound-on');
   } else {
     $btn.innerHTML = '&#128263;';
+    $btn.classList.remove('sound-on');
+  }
+}
+function updateMusicButton() {
+  const $btn = document.getElementById('btn-music');
+  if (musicEnabled) {
+    $btn.classList.add('sound-on');
+  } else {
     $btn.classList.remove('sound-on');
   }
 }
@@ -2505,10 +2523,12 @@ function onPointerDown(e) {
   if (gameOver || animating) return;
   e.preventDefault();
 
-  // Lazy-init audio on first gesture if sound was previously enabled
-  if (soundEnabled && !audioInitialized) {
+  // Lazy-init audio on first gesture if sound/music was previously enabled
+  if ((soundEnabled || musicEnabled) && !audioInitialized) {
     initAudio();
     resumeAudio();
+  }
+  if (musicEnabled && !musicPlaying) {
     startAmbientMusic();
   }
 
@@ -3738,7 +3758,8 @@ document.getElementById('btn-tutorial-close').addEventListener('click', () => {
 });
 document.getElementById('btn-reshuffle').addEventListener('click', doReshuffle);
 document.getElementById('btn-trophy').addEventListener('click', showLeaderboard);
-document.getElementById('btn-sound').addEventListener('click', toggleSound);
+document.getElementById('btn-sfx').addEventListener('click', toggleSfx);
+document.getElementById('btn-music').addEventListener('click', toggleMusic);
 document.getElementById('btn-overlay-lb').addEventListener('click', showLeaderboard);
 document.getElementById('btn-lb-close').addEventListener('click', hideLeaderboard);
 document.querySelectorAll('.lb-tab').forEach(tab => {
@@ -3793,8 +3814,10 @@ window.addEventListener('load', () => {
 });
 
 // Load sound preference
-soundEnabled = loadSoundSetting();
-updateSoundButton();
+soundEnabled = loadSetting(SOUND_STORAGE_KEY);
+musicEnabled = loadSetting(MUSIC_STORAGE_KEY);
+updateSfxButton();
+updateMusicButton();
 
 if (!hasSeenTutorial()) {
   $tutorial.classList.add('visible');
