@@ -872,6 +872,20 @@
     text-align: right;
   }
 
+  .lb-current {
+    background: rgba(126, 184, 208, 0.12);
+  }
+  .lb-current td {
+    color: var(--accent) !important;
+  }
+  .lb-current .lb-score-cell {
+    color: var(--accent) !important;
+    text-shadow: 0 0 8px var(--accent-glow);
+  }
+  .lb-current .lb-date-cell {
+    color: var(--accent) !important;
+  }
+
   .lb-empty {
     padding: 32px 0;
     color: var(--text-dim);
@@ -3351,10 +3365,23 @@ function reshuffleBoard() {
 // GAME OVER
 // ═══════════════════════════════════════════
 const GAME_OVER_PHRASES = [
-  'HEXED!',
-  'HEX-AGAIN?',
-  'SIX SIDES, ONE MORE TRY',
-  'TOTAL HEX-LAPSE',
+  'Hexcellent!', 'Hexemplary!', 'Hextacular!', 'Hexceptional!',
+  'Hextraordinary!', 'Hextra special!', 'Hextra nice!', 'Hextra impressive!',
+  'Hexceptionally done!', 'Hexceptional play!', 'Hexceptional finish!',
+  'You hexed the day!', 'That was hextremely good!', 'Hextreme skill!',
+  'Hextreme focus!', 'Hextreme clutch!', 'Pure hexcellence!',
+  'Certified hexcellence!', 'Peak hexformance!', 'Hexecution was perfect!',
+  'HEX YEAH!', 'HEX-TRA!', 'HEX WIN!', 'HEX LEVEL UP!',
+  'HEX MASTERED!', 'HEX COMPLETE!', 'HEX SUCCESS!', 'HEX LEGEND!',
+  'HEX MVP!', 'HEX PRO!', 'Hexcellent effort!', 'Hexcellent progress!',
+  'Hexcellent try—run it back!', 'Hexceptional hustle!',
+  'Hextra proud of you!', 'Hextra solid!',
+  'Hextra close—next one\u2019s yours!', 'Hextra strong finish!',
+  'Hextra good learning game!', 'Hextra improvement unlocked!',
+  'Hexactly right!', 'Hexactly the move!', 'Hexpert level!',
+  'Hexpert play!', 'Hexpertise on display!', 'Hextremely logical!',
+  'Hextremely clever!', 'Brilliant hexecution!', 'Tactical hexcellence!',
+  'Next-level hextelligence!',
 ];
 
 function showGameOver() {
@@ -3499,6 +3526,7 @@ const LB_KEY = 'hexchain-leaderboard';
 const LB_MAX = 10;
 let lbCurrentTab = 'today';
 let lbCurrentMode = 'classic';
+let lastEntryTimestamp = 0;  // Track most recent game's leaderboard entry
 
 function loadLeaderboard() {
   try {
@@ -3514,13 +3542,15 @@ function saveLeaderboard(entries) {
 
 function addLeaderboardEntry(entryScore, entryBestChain, entryMode, entryCleared, entryMoves) {
   const entries = loadLeaderboard();
+  const ts = Date.now();
+  lastEntryTimestamp = ts;
   entries.push({
     score: entryScore,
     chain: entryBestChain,
     cleared: entryCleared,
     moves: entryMoves,
     mode: entryMode,
-    date: Date.now(),
+    date: ts,
   });
   // Sort by score descending, keep all (we filter by period when displaying)
   entries.sort((a, b) => b.score - a.score);
@@ -3584,11 +3614,12 @@ function renderLeaderboard(period, mode) {
   filtered.forEach((entry, i) => {
     const rank = i + 1;
     const rankClass = rank <= 3 ? ` lb-rank-${rank}` : '';
-    html += `<tr>`;
+    const isCurrent = lastEntryTimestamp > 0 && entry.date === lastEntryTimestamp;
+    html += `<tr${isCurrent ? ' class="lb-current"' : ''}>`;
     html += `<td class="lb-rank${rankClass}">${rank}</td>`;
     html += `<td class="lb-score-cell">${entry.score.toLocaleString()}</td>`;
     html += `<td class="lb-chain-cell">${entry.chain}</td>`;
-    html += `<td class="lb-date-cell">${formatLbDate(entry.date)}</td>`;
+    html += `<td class="lb-date-cell">${isCurrent ? 'Now' : formatLbDate(entry.date)}</td>`;
     html += `</tr>`;
   });
 

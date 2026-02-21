@@ -34,7 +34,7 @@ Browser-based mobile puzzle game. Single HTML file, no frameworks, no build step
 - **Sprint mode**: 45-second timer, 6 colors, NO freezing. Timer starts on first chain. Long chains earn bonus time: 4-chain +1s, 5-chain +2s, 6-chain +3s, 7+ chain +5s.
 - Chain tier feedback: Nice! (3) → Great! (4) → Amazing! (5) → Fantastic! (6) → INCREDIBLE! (7) → LEGENDARY! (8) → GODLIKE!! (10+)
 - Deadlock detection via flood-fill connected components (excludes frozen tiles, wildcards bridge adjacent colors)
-- **Game Over phrases**: Random selection from: "HEXED!", "HEX-AGAIN?", "SIX SIDES, ONE MORE TRY", "TOTAL HEX-LAPSE"
+- **Game Over phrases**: Random selection from 50 hex-themed puns/phrases (e.g., "Hexcellent!", "HEX YEAH!", "Peak hexformance!", "Next-level hextelligence!")
 
 ## Tile Colors (8 defined, 6 used in all modes)
 Slate Blue (#5B8CB8), Sage (#5A9E7E), Ochre (#C8A855), Terracotta (#B85C5C), Plum (#8B6BAA), Copper (#C47850), Fern (#6AAA5A), Pewter (#A0A0A8). All have base/dark/light variants for gem gradient rendering.
@@ -57,7 +57,8 @@ Target ranges: fast game 5-10K, good game 10-30K, great game high 5 digits.
 - **Helper**: `track(event, props)` wraps `posthog.capture()` with try/catch
 
 ## Storage
-- localStorage for high scores per mode, tutorial seen flag, leaderboard (top 100 entries with timestamps, filtered by mode Classic/Sprint + period today/month/all-time for display), sound preference (`hexchain-sound`)
+- localStorage for high scores per mode, tutorial seen flag, leaderboard (top 100 entries with timestamps, filtered by mode Classic/Sprint + period today/month/all-time for display), sound preference (`hexchain-sound`), music preference (`hexchain-music`)
+- **Leaderboard highlight**: Most recent game's score is highlighted with accent color glow and "Now" date label if it made the current filtered list
 
 ## Audio & Haptics
 - **Audio engine**: Web Audio API for SFX (fully synthesized, no audio files). HTML5 Audio for background music (`background-music.mp3`).
