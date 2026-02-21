@@ -31,7 +31,7 @@ Browser-based mobile puzzle game. Single HTML file, no frameworks, no build step
 - **Streak multiplier**: Consecutive 5+ chains build a score multiplier: 1x → 2x → 3x → 4x... (whole number steps). Resets on a sub-5 chain or reshuffle. "Nx STREAK!" float text shown. Multiplier displayed in chain info bar.
 - **Manual reshuffle**: 1 reshuffle per game (reduced from 2). Button in info bar with ↻ icon + count. When no valid chains exist, reshuffle button pulses and persistent red "NO MORE MOVES" banner shows. Resets streak.
 - **Classic mode**: Unlimited moves, 6 colors. Frozen tiles cause board lockup. No timer. Shows Chains counter.
-- **Sprint mode**: 45-second timer, 6 colors, NO freezing. Timer starts on first chain. Long chains earn bonus time: 4-chain +1s, 5-chain +2s, 6-chain +3s, 7+ chain +5s.
+- **Sprint mode**: 45-second timer, 6 colors, NO freezing. Timer starts on first chain. Animations run at 50% duration (snappier feel). Long chains earn bonus time: 4-chain +1s, 5-chain +2s, 6-chain +3s, 7-chain +4s, 8-chain +5s, 9-chain +6s, 10+ chain +7s.
 - Chain tier feedback: Nice! (3) → Great! (4) → Amazing! (5) → Fantastic! (6) → INCREDIBLE! (7) → LEGENDARY! (8) → GODLIKE!! (10+)
 - Deadlock detection via flood-fill connected components (excludes frozen tiles, wildcards bridge adjacent colors)
 - **Game Over phrases**: Random selection from 50 hex-themed puns/phrases (e.g., "Hexcellent!", "HEX YEAH!", "Peak hexformance!", "Next-level hextelligence!")
@@ -105,7 +105,7 @@ const MAX_RESHUFFLES = 1;
 const SPRINT_TIME = 45;        // seconds
 const NOVA_ENABLED = false;    // feature flag for nova tiles (disabled)
 const WILDCARD_INTERVAL = 8;   // wildcard every 8-10 moves
-const TIME_BONUSES = { 3: 0, 4: 1, 5: 2, 6: 3, 7: 5 };
+const TIME_BONUSES = { 3: 0, 4: 1, 5: 2, 6: 3, 7: 4, 8: 5, 9: 6, 10: 7 };
 const SCORE_TABLE = { 3: 150, 4: 400, 5: 850, 6: 1500, 7: 2500, 8: 4000, 9: 6500, 10: 10000 };
 ```
 

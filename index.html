@@ -1016,10 +1016,11 @@
     </div>
     <div class="header-bar">
       <div class="header-left">
-        <button class="btn-trophy" id="btn-trophy" aria-label="High Scores">&#127942;</button>
-        <button class="btn-help" id="btn-help" aria-label="How to play">?</button>
-        <button class="btn-sound" id="btn-sfx" aria-label="Toggle sound effects">&#128263;</button>
-      <button class="btn-sound" id="btn-music" aria-label="Toggle music">&#127925;</button>
+        <button class="btn-trophy" id="btn-trophy" aria-label="High Scores" title="High Scores">&#127942;</button>
+        <button class="btn-help" id="btn-help" aria-label="How to play" title="How to Play">?</button>
+        <button class="btn-sound" id="btn-sfx" aria-label="Toggle sound effects" title="Sound Effects: OFF">&#128263;</button>
+        <button class="btn-sound" id="btn-music" aria-label="Toggle music" title="Music: OFF">&#127925;</button>
+        <button class="btn-sound" id="btn-speed" aria-label="Toggle fast animations" title="Fast Animations: OFF">&#9889;</button>
       </div>
       <div class="scores">
         <div class="score-block">
@@ -1161,11 +1162,17 @@ const SQRT3 = Math.sqrt(3);
 
 // Sprint timer
 const SPRINT_TIME = 45; // seconds
-const TIME_BONUSES = { 3: 0, 4: 1, 5: 2, 6: 3, 7: 5 }; // chain length -> bonus seconds
+const TIME_BONUSES = { 3: 0, 4: 0, 5: 1, 6: 2, 7: 3, 8: 4, 9: 5, 10: 6 }; // chain length -> bonus seconds
 function getTimeBonus(len) {
-  if (len >= 7) return TIME_BONUSES[7];
+  if (len >= 10) return TIME_BONUSES[10];
   return TIME_BONUSES[len] || 0;
 }
+
+// Animation speed: Sprint always fast, Classic toggleable
+function isSprint() { return gameMode === MODE_SPRINT; }
+let classicFastAnims = false;
+const FAST_ANIM_KEY = 'hexchain-fast-anims';
+function animScale() { return (isSprint() || classicFastAnims) ? 0.5 : 1; }
 
 // Colors: 6 in all modes, no escalation
 const NUM_COLORS = 6;
@@ -1640,6 +1647,7 @@ function updateSfxButton() {
     $btn.innerHTML = '&#128263;';
     $btn.classList.remove('sound-on');
   }
+  $btn.title = `Sound Effects: ${soundEnabled ? 'ON' : 'OFF'}`;
 }
 function updateMusicButton() {
   const $btn = document.getElementById('btn-music');
@@ -1648,6 +1656,23 @@ function updateMusicButton() {
   } else {
     $btn.classList.remove('sound-on');
   }
+  $btn.title = `Music: ${musicEnabled ? 'ON' : 'OFF'}`;
+}
+function toggleSpeed() {
+  classicFastAnims = !classicFastAnims;
+  saveSetting(FAST_ANIM_KEY, classicFastAnims);
+  updateSpeedButton();
+}
+function updateSpeedButton() {
+  const $btn = document.getElementById('btn-speed');
+  if (classicFastAnims) {
+    $btn.classList.add('sound-on');
+  } else {
+    $btn.classList.remove('sound-on');
+  }
+  $btn.title = `Fast Animations: ${classicFastAnims ? 'ON' : 'OFF'}`;
+  // Only show in Classic mode
+  $btn.style.display = isSprint() ? 'none' : '';
 }
 
 // Wildcard spawn tracking
@@ -2781,7 +2806,7 @@ function executeChain(path) {
   clearTimeout(chainInfoTimeout);
   chainInfoTimeout = setTimeout(() => {
     $chainInfo.className = 'chain-info';
-  }, length >= 8 ? 2500 : length >= 6 ? 2000 : length >= 4 ? 1600 : 1200);
+  }, (length >= 8 ? 2500 : length >= 6 ? 2000 : length >= 4 ? 1600 : 1200) * animScale());
 
   // Save tiles before removal (for clear animation + nova/lightning checks)
   const savedTiles = new Map();
@@ -2790,8 +2815,9 @@ function executeChain(path) {
     const tile = board.get(key);
     if (tile) savedTiles.set(key, { ...tile });
   }
-  const staggerDelay = 65;
-  const cellDuration = 450;
+  const s = animScale();
+  const staggerDelay = 65 * s;
+  const cellDuration = 450 * s;
   const now = performance.now();
 
   path.forEach((cell, i) => {
@@ -2962,7 +2988,7 @@ function executeChain(path) {
         }
         animating = false;
         requestRender();
-      }, 500);
+      }, 500 * animScale());
     }
 
     // Helper: run the color wipe phase (called after nova phase or directly)
@@ -2986,9 +3012,9 @@ function executeChain(path) {
       sfxColorWipe();
       hapticColorWipe();
 
-      // Phase: Highlight all matching tiles for 700ms
+      // Phase: Highlight all matching tiles for 700ms (350ms in Sprint)
       const now2 = performance.now();
-      const highlightDur = 700;
+      const highlightDur = 700 * animScale();
 
       wipeTiles.forEach((wt) => {
         highlightAnims.set(wt.key, {
@@ -3006,10 +3032,11 @@ function executeChain(path) {
 
         // Slow clear animation (fade + shrink)
         const now4 = performance.now();
+        const ws = animScale();
         wipeTiles.forEach((wt, i) => {
           clearAnims.set(wt.key, {
-            startTime: now4 + i * 25,
-            duration: 450,
+            startTime: now4 + i * (25 * ws),
+            duration: 450 * ws,
             tile: wt.tile,
           });
           const cpx = axialToPixel(wt.q, wt.r, HEX_SIZE);
@@ -3025,7 +3052,7 @@ function executeChain(path) {
         requestRender();
 
         // After clear animations finish, gravity + refill for the wiped gaps
-        const wipeClearDuration = wipeTiles.length * 25 + 450 + 100;
+        const wipeClearDuration = wipeTiles.length * (25 * ws) + 450 * ws + 100;
         setTimeout(() => {
           applyGravity();
           refillBoard();
@@ -3036,7 +3063,7 @@ function executeChain(path) {
 
     // --- NOVA PHASE: highlight → disappear → gravity → then color wipe ---
     if (novaTargetList.length > 0) {
-      const novaHighlightDur = 700;
+      const novaHighlightDur = 700 * animScale();
       const now3 = performance.now();
 
       // Highlight nova targets for 700ms (tiles still on board, visible)
@@ -3057,10 +3084,11 @@ function executeChain(path) {
 
         // Clear animations
         const now5 = performance.now();
+        const ns = animScale();
         novaTargetList.forEach((nt, i) => {
           clearAnims.set(nt.key, {
-            startTime: now5 + i * 25,
-            duration: 400,
+            startTime: now5 + i * (25 * ns),
+            duration: 400 * ns,
             tile: nt.tile,
           });
           const cpx = axialToPixel(nt.q, nt.r, HEX_SIZE);
@@ -3075,7 +3103,7 @@ function executeChain(path) {
         requestRender();
 
         // After clear anims, gravity + refill, then proceed to color wipe
-        const novaClearDuration = novaTargetList.length * 25 + 400 + 100;
+        const novaClearDuration = novaTargetList.length * (25 * ns) + 400 * ns + 100;
         setTimeout(() => {
           applyGravity();
           refillBoard();
@@ -3083,7 +3111,7 @@ function executeChain(path) {
           // Wait for gravity settle before color wipe phase
           setTimeout(() => {
             runColorWipePhase();
-          }, 500);
+          }, 500 * animScale());
         }, novaClearDuration);
       }, novaHighlightDur + 50);
     } else {
@@ -3095,7 +3123,7 @@ function executeChain(path) {
         // Wait for gravity settle before starting color wipe phase
         setTimeout(() => {
           runColorWipePhase();
-        }, 500);
+        }, 500 * animScale());
       } else {
         finishChain();
       }
@@ -3202,9 +3230,10 @@ function applyGravity() {
     // chain from its previous origin for a smooth cascade
     const existing = settleAnims.get(destKey);
 
+    const gs = animScale();
     settleAnims.set(destKey, {
-      startTime: now + move.pass * 120, // 120ms stagger per cascade pass (was 70)
-      duration: 550, // slower, more visible settle (was 320)
+      startTime: now + move.pass * (120 * gs), // 120ms stagger per cascade pass (was 70)
+      duration: 550 * gs, // slower, more visible settle (was 320)
       startOffsetX: (existing ? existing.startOffsetX : 0) + (oldPixel.x - newPixel.x),
       startOffsetY: (existing ? existing.startOffsetY : 0) + (oldPixel.y - newPixel.y),
     });
@@ -3253,8 +3282,8 @@ function refillBoard() {
 
     board.set(key, tile);
     appearAnims.set(key, {
-      startTime: now + delay * 40,
-      duration: 280,
+      startTime: now + delay * (40 * animScale()),
+      duration: 280 * animScale(),
     });
     delay++;
   });
@@ -3712,6 +3741,9 @@ function initGame(mode = MODE_CLASSIC) {
   document.getElementById('btn-classic').className = `btn ${mode === MODE_CLASSIC ? 'btn-primary' : 'btn-secondary'}`;
   document.getElementById('btn-sprint').className = `btn ${mode === MODE_SPRINT ? 'btn-primary' : 'btn-secondary'}`;
 
+  // Show/hide speed toggle (only relevant in Classic)
+  updateSpeedButton();
+
   // Reset reshuffle button
   updateReshuffleButton();
 
@@ -3791,6 +3823,7 @@ document.getElementById('btn-reshuffle').addEventListener('click', doReshuffle);
 document.getElementById('btn-trophy').addEventListener('click', showLeaderboard);
 document.getElementById('btn-sfx').addEventListener('click', toggleSfx);
 document.getElementById('btn-music').addEventListener('click', toggleMusic);
+document.getElementById('btn-speed').addEventListener('click', toggleSpeed);
 document.getElementById('btn-overlay-lb').addEventListener('click', showLeaderboard);
 document.getElementById('btn-lb-close').addEventListener('click', hideLeaderboard);
 document.querySelectorAll('.lb-tab').forEach(tab => {
@@ -3847,8 +3880,10 @@ window.addEventListener('load', () => {
 // Load sound preference
 soundEnabled = loadSetting(SOUND_STORAGE_KEY);
 musicEnabled = loadSetting(MUSIC_STORAGE_KEY);
+classicFastAnims = loadSetting(FAST_ANIM_KEY);
 updateSfxButton();
 updateMusicButton();
+updateSpeedButton();
 
 if (!hasSeenTutorial()) {
   $tutorial.classList.add('visible');
