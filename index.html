@@ -1204,23 +1204,23 @@ const SCORE_TABLE = {
   7: 2500, 8: 4000, 9: 6500, 10: 10000
 };
 
-// Chain tier feedback
-const CHAIN_TIERS = [
-  { min: 3, label: 'Nice!',       tier: '' },
-  { min: 4, label: 'Great!',      tier: '' },
-  { min: 5, label: 'Amazing!',    tier: '' },
-  { min: 6, label: 'Fantastic!',  tier: 'epic' },
-  { min: 7, label: 'INCREDIBLE!', tier: 'epic' },
-  { min: 8, label: 'LEGENDARY!',  tier: 'legendary' },
-  { min: 10, label: 'GODLIKE!!',  tier: 'legendary' },
+// Chain tier feedback — random words from pool, tier styling by length
+const CHAIN_WORDS = [
+  'Legendary!', 'Incredible!', 'Brilliant!', 'Unbelievable!', 'Insane!',
+  'Epic!', 'Masterful!', 'Superb!', 'Outstanding!', 'Phenomenal!',
+  'Spectacular!', 'Immaculate!', 'Flawless!', 'Perfect!', 'Elite!',
+  'Iconic!', 'Majestic!', 'Pristine!', 'Glorious!', 'Genius!',
+  'Big brain!', '200 IQ!', 'Chess move!', 'Calculated!', 'Surgical!',
+  'Clinical!', 'Precision!', 'Tactical!', 'Next-level thinking!',
+  'Found the angle!', 'What a read!', 'Clean sequence!',
 ];
 
 function getChainTier(length) {
-  let result = CHAIN_TIERS[0];
-  for (const tier of CHAIN_TIERS) {
-    if (length >= tier.min) result = tier;
-  }
-  return result;
+  const label = CHAIN_WORDS[Math.floor(Math.random() * CHAIN_WORDS.length)];
+  let tier = '';
+  if (length >= 8) tier = 'legendary';
+  else if (length >= 6) tier = 'epic';
+  return { label, tier };
 }
 
 // Game modes
@@ -2806,7 +2806,7 @@ function executeChain(path) {
   clearTimeout(chainInfoTimeout);
   chainInfoTimeout = setTimeout(() => {
     $chainInfo.className = 'chain-info';
-  }, (length >= 8 ? 2500 : length >= 6 ? 2000 : length >= 4 ? 1600 : 1200) * animScale());
+  }, length >= 8 ? 2500 : length >= 6 ? 2000 : length >= 4 ? 1600 : 1200);
 
   // Save tiles before removal (for clear animation + nova/lightning checks)
   const savedTiles = new Map();

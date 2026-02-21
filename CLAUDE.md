@@ -31,8 +31,8 @@ Browser-based mobile puzzle game. Single HTML file, no frameworks, no build step
 - **Streak multiplier**: Consecutive 5+ chains build a score multiplier: 1x → 2x → 3x → 4x... (whole number steps). Resets on a sub-5 chain or reshuffle. "Nx STREAK!" float text shown. Multiplier displayed in chain info bar.
 - **Manual reshuffle**: 1 reshuffle per game (reduced from 2). Button in info bar with ↻ icon + count. When no valid chains exist, reshuffle button pulses and persistent red "NO MORE MOVES" banner shows. Resets streak.
 - **Classic mode**: Unlimited moves, 6 colors. Frozen tiles cause board lockup. No timer. Shows Chains counter.
-- **Sprint mode**: 45-second timer, 6 colors, NO freezing. Timer starts on first chain. Animations run at 50% duration (snappier feel). Long chains earn bonus time: 4-chain +1s, 5-chain +2s, 6-chain +3s, 7-chain +4s, 8-chain +5s, 9-chain +6s, 10+ chain +7s.
-- Chain tier feedback: Nice! (3) → Great! (4) → Amazing! (5) → Fantastic! (6) → INCREDIBLE! (7) → LEGENDARY! (8) → GODLIKE!! (10+)
+- **Sprint mode**: 45-second timer, 6 colors, NO freezing. Timer starts on first chain. Animations run at 50% duration (snappier feel). Long chains earn bonus time: 4-chain +0s, 5-chain +1s, 6-chain +2s, 7-chain +3s, 8-chain +4s, 9-chain +5s, 10+ chain +6s.
+- Chain tier feedback: Random word from 32-word pool (e.g., "Legendary!", "Surgical!", "200 IQ!"). Styling: normal (3-5), epic/red (6-7), legendary/pink (8+). Display duration NOT affected by animation speed toggle.
 - Deadlock detection via flood-fill connected components (excludes frozen tiles, wildcards bridge adjacent colors)
 - **Game Over phrases**: Random selection from 50 hex-themed puns/phrases (e.g., "Hexcellent!", "HEX YEAH!", "Peak hexformance!", "Next-level hextelligence!")
 
