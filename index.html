@@ -7,6 +7,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <title>Hex Chain</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#141419">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="preview.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://hexchain.onrender.com">
 <meta property="og:title" content="Hex Chain">
@@ -3906,5 +3911,6 @@ setInterval(() => {
   if (!rafId) requestRender();
 }, 50);
 </script>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js');</script>
 </body>
 </html>

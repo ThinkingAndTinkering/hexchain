@@ -121,6 +121,16 @@ const SCORE_TABLE = { 3: 150, 4: 400, 5: 850, 6: 1500, 7: 2500, 8: 4000, 9: 6500
 - **Gravity animation slowed**: Settle duration 320ms→550ms, cascade stagger 70ms→120ms per pass. More visible plinko-style movement.
 - **Color wipe notification**: Uses float text ("COLOR WIPE!") matching nova style. Both effects use same notification approach.
 - **Audio + haptics added**: 12 synthesized SFX (Web Audio API), procedural ambient music (3 oscillators + LFO filter sweep), haptic vibration (Android). Sound toggle in header, default OFF, persisted in localStorage.
+- **PWA/offline support**: Service worker (`sw.js`) + web app manifest (`manifest.json`). Cache-first strategy, precaches core assets, runtime-caches Google Fonts. Fully playable offline after first visit.
+
+## PWA / Offline Support
+- **Installable**: Web app manifest (`manifest.json`) with standalone display, portrait orientation, dark theme
+- **Service Worker** (`sw.js`): Cache-first strategy with versioned cache (`hexchain-v1`)
+- **Precached assets**: `index.html`, `background-music.mp3`, `manifest.json`, `preview.png`
+- **Runtime-cached**: Google Fonts (CSS + font files) — cached on first load, served from cache thereafter
+- **Analytics**: PostHog requests pass through to network; fail silently when offline (already wrapped in try/catch)
+- **Fully playable offline** after first visit — all game logic is inline, scores are in localStorage
+- **Cache versioning**: Bump `CACHE_NAME` in `sw.js` when deploying updates; old caches are auto-cleaned on activation
 
 ## Hosting
 - GitHub repo: `ThinkingAndTinkering/hexchain`

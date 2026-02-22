@@ -1,0 +1,24 @@
+{
+  "name": "Hex Chain",
+  "short_name": "Hex Chain",
+  "description": "A premium hex-grid puzzle game. Draw chains through matching tiles.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#141419",
+  "background_color": "#141419",
+  "icons": [
+    {
+      "src": "preview.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "preview.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
