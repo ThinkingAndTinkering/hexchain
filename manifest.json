@@ -1,24 +1,30 @@
 {
   "name": "Hex Chain",
   "short_name": "Hex Chain",
-  "description": "A premium hex-grid puzzle game. Draw chains through matching tiles.",
+  "description": "Draw paths through matching hexes. Longer chains score way more!",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait",
-  "theme_color": "#141419",
   "background_color": "#141419",
+  "theme_color": "#141419",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "preview.png",
+      "src": "icon-192.svg",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "preview.png",
+      "src": "icon-512.svg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any"
+    },
+    {
+      "src": "icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }

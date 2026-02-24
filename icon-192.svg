@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="192" height="192">
+  <defs>
+    <linearGradient id="gb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stop-color="#8FBDD8"/><stop offset="50%" stop-color="#5B8CB8"/><stop offset="95%" stop-color="#3D6A8F"/>
+    </linearGradient>
+    <linearGradient id="gs" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stop-color="#7BC4A0"/><stop offset="50%" stop-color="#5A9E7E"/><stop offset="95%" stop-color="#3D7A5C"/>
+    </linearGradient>
+    <linearGradient id="go" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stop-color="#E0C878"/><stop offset="50%" stop-color="#C8A855"/><stop offset="95%" stop-color="#A08030"/>
+    </linearGradient>
+    <linearGradient id="gt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stop-color="#D47E7E"/><stop offset="50%" stop-color="#B85C5C"/><stop offset="95%" stop-color="#8F3D3D"/>
+    </linearGradient>
+    <linearGradient id="gp" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stop-color="#A98BC6"/><stop offset="50%" stop-color="#8B6BAA"/><stop offset="95%" stop-color="#6B4D88"/>
+    </linearGradient>
+    <linearGradient id="gc" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stop-color="#DC9878"/><stop offset="50%" stop-color="#C47850"/><stop offset="95%" stop-color="#9C5830"/>
+    </linearGradient>
+    <radialGradient id="hl" cx="0.5" cy="0.25" r="0.5">
+      <stop offset="0%" stop-color="white" stop-opacity="0.28"/>
+      <stop offset="55%" stop-color="white" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="80" fill="#141419"/>
+
+  <!-- 7-hex cluster: center + 6 neighbors. Size=72, spacing=76 -->
+  <!-- Pointy-top hex points for s=72: 0,-72 62.4,-36 62.4,36 0,72 -62.4,36 -62.4,-36 -->
+  <!-- Hex spacing: dx=131.5*q + 65.8*r, dy=114*r -->
+
+  <!-- Center: Copper -->
+  <g transform="translate(256,256)"><polygon points="0,-72 62.4,-36 62.4,36 0,72 -62.4,36 -62.4,-36" fill="url(#gc)" stroke="#0d0d12" stroke-width="2.5"/><polygon points="0,-72 62.4,-36 62.4,36 0,72 -62.4,36 -62.4,-36" fill="url(#hl)"/></g>
+
+  <!-- (1,0): Blue — right -->
+  <g transform="translate(387.5,256)"><polygon points="0,-72 62.4,-36 62.4,36 0,72 -62.4,36 -62.4,-36" fill="url(#gb)" stroke="#0d0d12" stroke-width="2.5"/><polygon points="0,-72 62.4,-36 62.4,36 0,72 -62.4,36 -62.4,-36" fill="url(#hl)"/></g>
+
+  <!-- (-1,0): Plum — left -->
+  <g transform="translate(124.5,256)"><polygon points="0,-72 62.4,-36 62.4,36 0,72 -62.4,36 -62.4,-36" fill="url(#gp)" stroke="#0d0d12" stroke-width="2.5"/><polygon points="0,-72 62.4,-36 62.4,36 0,72 -62.4,36 -62.4,-36" fill="url(#hl)"/></g>
+
+  <!-- (0,-1): Sage — upper-left -->
+  <g transform="translate(190.2,142)"><polygon points="0,-72 62.4,-36 62.4,36 0,72 -62.4,36 -62.4,-36" fill="url(#gs)" stroke="#0d0d12" stroke-width="2.5"/><polygon points="0,-72 62.4,-36 62.4,36 0,72 -62.4,36 -62.4,-36" fill="url(#hl)"/></g>
+
+  <!-- (1,-1): Terracotta — upper-right -->
+  <g transform="translate(321.8,142)"><polygon points="0,-72 62.4,-36 62.4,36 0,72 -62.4,36 -62.4,-36" fill="url(#gt)" stroke="#0d0d12" stroke-width="2.5"/><polygon points="0,-72 62.4,-36 62.4,36 0,72 -62.4,36 -62.4,-36" fill="url(#hl)"/></g>
+
+  <!-- (-1,1): Ochre — lower-left -->
+  <g transform="translate(190.2,370)"><polygon points="0,-72 62.4,-36 62.4,36 0,72 -62.4,36 -62.4,-36" fill="url(#go)" stroke="#0d0d12" stroke-width="2.5"/><polygon points="0,-72 62.4,-36 62.4,36 0,72 -62.4,36 -62.4,-36" fill="url(#hl)"/></g>
+
+  <!-- (0,1): Blue variant (Sage) — lower-right -->
+  <g transform="translate(321.8,370)"><polygon points="0,-72 62.4,-36 62.4,36 0,72 -62.4,36 -62.4,-36" fill="url(#gb)" stroke="#0d0d12" stroke-width="2.5"/><polygon points="0,-72 62.4,-36 62.4,36 0,72 -62.4,36 -62.4,-36" fill="url(#hl)"/></g>
+</svg>

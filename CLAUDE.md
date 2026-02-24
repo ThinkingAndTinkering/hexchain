@@ -58,6 +58,7 @@ Target ranges: fast game 5-10K, good game 10-30K, great game high 5 digits.
 
 ## Storage
 - localStorage for high scores per mode, tutorial seen flag, leaderboard (top 100 entries with timestamps, filtered by mode Classic/Sprint + period today/month/all-time for display), sound preference (`hexchain-sound`), music preference (`hexchain-music`)
+- **Game state persistence** (`hexchain-save`): Board, score, moves, streaks, and all game variables saved to localStorage. Auto-saves after each chain completes and on page hide/unload. Restored on page load with "Game restored" toast. Saves expire after 24 hours. Cleared on game over or new game start.
 - **Leaderboard highlight**: Most recent game's score is highlighted with accent color glow and "Now" date label if it made the current filtered list
 
 ## Audio & Haptics
@@ -121,16 +122,19 @@ const SCORE_TABLE = { 3: 150, 4: 400, 5: 850, 6: 1500, 7: 2500, 8: 4000, 9: 6500
 - **Gravity animation slowed**: Settle duration 320ms→550ms, cascade stagger 70ms→120ms per pass. More visible plinko-style movement.
 - **Color wipe notification**: Uses float text ("COLOR WIPE!") matching nova style. Both effects use same notification approach.
 - **Audio + haptics added**: 12 synthesized SFX (Web Audio API), procedural ambient music (3 oscillators + LFO filter sweep), haptic vibration (Android). Sound toggle in header, default OFF, persisted in localStorage.
-- **PWA/offline support**: Service worker (`sw.js`) + web app manifest (`manifest.json`). Cache-first strategy, precaches core assets, runtime-caches Google Fonts. Fully playable offline after first visit.
+- **Audio init fix**: `resumeAudio()` now called on every pointerdown (not just first), and `toggleMusic` also inits AudioContext from its click event. Fixes SFX not playing until music toggled.
+- **PWA support added**: manifest.json, service worker (sw.js), SVG icons, iOS meta tags. Fullscreen standalone mode, offline play.
+- **Game state persistence**: Auto-saves board + score + all game state after each chain and on page hide/unload. Restores on page load. 24-hour expiry.
+- **Toast duration tweaks**: "Tiles are aging faster!" toast now stays 4s (was 1.8s). `showToastMessage` accepts optional duration param.
+- **Score float text**: 500K+ scores linger 3.5s, 100K+ linger 2.5s. Float text now shows comma-formatted scores.
 
-## PWA / Offline Support
-- **Installable**: Web app manifest (`manifest.json`) with standalone display, portrait orientation, dark theme
-- **Service Worker** (`sw.js`): Cache-first strategy with versioned cache (`hexchain-v1`)
-- **Precached assets**: `index.html`, `background-music.mp3`, `manifest.json`, `preview.png`
-- **Runtime-cached**: Google Fonts (CSS + font files) — cached on first load, served from cache thereafter
-- **Analytics**: PostHog requests pass through to network; fail silently when offline (already wrapped in try/catch)
-- **Fully playable offline** after first visit — all game logic is inline, scores are in localStorage
-- **Cache versioning**: Bump `CACHE_NAME` in `sw.js` when deploying updates; old caches are auto-cleaned on activation
+## PWA
+- **manifest.json**: App name, icons (SVG 192/512), standalone display, dark theme
+- **sw.js**: Service worker with cache-first strategy for same-origin assets, network-first for external (fonts, analytics). Cache name `hexchain-v2`.
+- **Offline support**: Caches index.html, manifest, icons, background music. Game fully playable offline after first load.
+- **iOS meta tags**: `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, apple-touch-icon
+- **Icons**: 512×512 uses 19-hex grid (radius 2), 192×192 uses 7-hex cluster (radius 1) for clarity at small sizes. Both use game's actual gem gradient colors. SVG format.
+- **Install banner**: Top-of-screen banner prompting "Add to Home Screen". Trigger: 2nd visit in same day. iOS shows Share icon + instructions, Android/desktop uses `beforeinstallprompt` with Install button. Dismissal remembered for 7 days in localStorage (`hexchain-install-dismissed`). Hidden when app is already installed (standalone mode). Visit tracking via `hexchain-visits-today`.
 
 ## Hosting
 - GitHub repo: `ThinkingAndTinkering/hexchain`
