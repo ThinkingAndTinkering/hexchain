@@ -1700,8 +1700,12 @@ function hapticGameOver() { haptic(200); }
 function hapticTimerTick() { haptic(15); }
 
 // ── Sound toggles ──
-function loadSetting(key) {
-  try { return localStorage.getItem(key) === '1'; } catch { return false; }
+function loadSetting(key, defaultVal = false) {
+  try {
+    const val = localStorage.getItem(key);
+    if (val === null) return defaultVal;
+    return val === '1';
+  } catch { return defaultVal; }
 }
 function saveSetting(key, val) {
   try { localStorage.setItem(key, val ? '1' : '0'); } catch {}
@@ -4148,13 +4152,25 @@ window.addEventListener('load', () => {
   requestRender();
 });
 
-// Load sound preference
-soundEnabled = loadSetting(SOUND_STORAGE_KEY);
+// Load sound preference (SFX defaults ON, music defaults OFF)
+soundEnabled = loadSetting(SOUND_STORAGE_KEY, true);
 musicEnabled = loadSetting(MUSIC_STORAGE_KEY);
 classicFastAnims = loadSetting(FAST_ANIM_KEY);
 updateSfxButton();
 updateMusicButton();
 updateSpeedButton();
+
+// Init AudioContext on first user gesture (click/touchend are strongest for iOS)
+function initAudioOnGesture() {
+  if (soundEnabled || musicEnabled) {
+    initAudio();
+    resumeAudio();
+  }
+  document.removeEventListener('click', initAudioOnGesture, true);
+  document.removeEventListener('touchend', initAudioOnGesture, true);
+}
+document.addEventListener('click', initAudioOnGesture, true);
+document.addEventListener('touchend', initAudioOnGesture, true);
 
 if (!hasSeenTutorial()) {
   $tutorial.classList.add('visible');
