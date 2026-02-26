@@ -4202,7 +4202,7 @@ window.addEventListener('beforeunload', () => {
 
 // Register service worker for PWA / offline support
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
+  navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch(() => {});
 }
 
 // ═══════════════════════════════════════════
@@ -4286,6 +4286,6 @@ if ('serviceWorker' in navigator) {
   });
 })();
 </script>
-<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js');</script>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js',{updateViaCache:'none'});</script>
 </body>
 </html>

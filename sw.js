@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hexchain-v4';
+const CACHE_NAME = 'hexchain-v5';
 const ASSETS = [
   '/',
   '/index.html',
