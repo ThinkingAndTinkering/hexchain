@@ -326,10 +326,10 @@
     align-items: center;
     gap: 5px;
     background: var(--surface);
-    border: 1.5px solid rgba(255,255,255,0.1);
+    border: 1.5px solid var(--accent);
     border-radius: 10px;
     padding: 6px 12px;
-    color: var(--text-dim);
+    color: var(--accent);
     font-family: 'Inter', system-ui, sans-serif;
     font-size: 11px;
     font-weight: 600;
@@ -337,6 +337,7 @@
     cursor: pointer;
     transition: transform 0.1s, opacity 0.15s, border-color 0.3s, color 0.3s, box-shadow 0.3s;
     flex-shrink: 0;
+    box-shadow: 0 0 8px var(--accent-glow);
   }
 
   .btn-reshuffle:active {
@@ -1134,7 +1135,7 @@
     </div>
     <div class="info-bar-right">
       <div class="streak-badge" id="streak-badge"><span class="streak-fire">&#128293;</span><span class="streak-value" id="streak-value">2x</span></div>
-      <button class="btn-reshuffle" id="btn-reshuffle" aria-label="Reshuffle board">
+      <button class="btn-reshuffle" id="btn-reshuffle" aria-label="Shuffle board">
       <span class="reshuffle-icon">&#x21BB;</span><span class="reshuffle-label">Shuffle</span><span class="reshuffle-count" id="reshuffle-count">1</span>
     </button>
     </div>
@@ -1208,7 +1209,7 @@
     </div>
     <div class="rule">
       <div class="rule-icon">&#x21BB;</div>
-      <div class="rule-text">Stuck? You get <strong>1 reshuffle</strong> per game. Use it wisely — when it's gone, a deadlock ends the game!</div>
+      <div class="rule-text">Stuck? Tap <strong>Shuffle</strong> to unfreeze and reshuffle the board. Thawed tiles get <strong>2 moves</strong> before re-freezing. One use per game!</div>
     </div>
     <div class="rule">
       <div class="rule-icon">&#x1F3C6;</div>
@@ -3669,6 +3670,7 @@ function restoreGameState(state) {
   $score.textContent = score.toLocaleString();
   $highscore.textContent = highScore.toLocaleString();
   updateStreakBadge();
+
   updateReshuffleButton();
 
   const $movesLabel = document.getElementById('moves-label');
@@ -3984,7 +3986,7 @@ function initGame(mode = MODE_CLASSIC) {
   // Show/hide speed toggle (only relevant in Classic)
   updateSpeedButton();
 
-  // Reset reshuffle button
+  // Reset shuffle button
   updateReshuffleButton();
 
   $overlay.classList.remove('visible');
@@ -4025,8 +4027,23 @@ function doReshuffle() {
   streakMultiplier = 1;
   updateStreakBadge();
   hideStuckBanner();
+
+  if (gameMode === MODE_CLASSIC) {
+    // Classic: unfreeze all frozen tiles (give them 2 moves before re-freezing) then shuffle
+    const effectiveFreezeAge = getEffectiveFreezeAge();
+    for (const cell of gridCells) {
+      const key = hexKey(cell.q, cell.r);
+      const tile = board.get(key);
+      if (!tile) continue;
+      if (tile.age >= effectiveFreezeAge) {
+        tile.age = Math.max(effectiveFreezeAge - 2, 0);
+      }
+    }
+  }
   reshuffleBoard();
+
   updateReshuffleButton();
+  requestRender();
   track('reshuffle_used', {
     reshuffles_remaining: reshufflesRemaining,
     mode: gameMode === MODE_CLASSIC ? 'classic' : 'sprint',

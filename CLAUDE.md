@@ -29,7 +29,7 @@ Browser-based mobile puzzle game. Single HTML file, no frameworks, no build step
 
 ### Other Mechanics
 - **Streak multiplier**: Consecutive 5+ chains build a score multiplier: 1x → 2x → 3x → 4x... (whole number steps). Resets on a sub-5 chain or reshuffle. "Nx STREAK!" float text shown. Multiplier displayed in chain info bar.
-- **Manual reshuffle**: 1 reshuffle per game (reduced from 2). Button in info bar with ↻ icon + count. When no valid chains exist, reshuffle button pulses and persistent red "NO MORE MOVES" banner shows. Resets streak.
+- **Shuffle (with unfreeze)**: 1 use per game. Button in info bar with ↻ icon + count, accent blue glow when available. In Classic mode: unfreezes all frozen tiles (sets age to `effectiveFreezeAge - 2`, so they show "2" countdown = 2 moves before re-freezing) THEN shuffles entire board. In Sprint mode: just shuffles (no freeze mechanic). When no valid chains exist, shuffle button pulses and persistent red "NO MORE MOVES" banner shows. Resets streak multiplier.
 - **Classic mode**: Unlimited moves, 6 colors. Frozen tiles cause board lockup. No timer. Shows Chains counter.
 - **Sprint mode**: 45-second timer, 6 colors, NO freezing. Timer starts on first chain. Animations run at 50% duration (snappier feel). Long chains earn bonus time: 4-chain +0s, 5-chain +1s, 6-chain +2s, 7-chain +3s, 8-chain +4s, 9-chain +5s, 10+ chain +6s.
 - Chain tier feedback: Random word from 32-word pool (e.g., "Legendary!", "Surgical!", "200 IQ!"). Styling: normal (3-5), epic/red (6-7), legendary/pink (8+). Display duration NOT affected by animation speed toggle.
@@ -127,10 +127,11 @@ const SCORE_TABLE = { 3: 150, 4: 400, 5: 850, 6: 1500, 7: 2500, 8: 4000, 9: 6500
 - **Game state persistence**: Auto-saves board + score + all game state after each chain and on page hide/unload. Restores on page load. 24-hour expiry.
 - **Toast duration tweaks**: "Tiles are aging faster!" toast now stays 4s (was 1.8s). `showToastMessage` accepts optional duration param.
 - **Score float text**: 500K+ scores linger 3.5s, 100K+ linger 2.5s. Float text now shows comma-formatted scores.
+- **Shuffle rework (unfreeze + shuffle)**: Shuffle button in Classic mode now unfreezes all frozen tiles (setting age to `effectiveFreezeAge - 2` so they show "2" countdown) before reshuffling the entire board. Sprint mode unchanged (just shuffles). Button styled with accent blue glow when available, dims when used. Resets streak multiplier. SW cache bumped to v4.
 
 ## PWA
 - **manifest.json**: App name, icons (SVG 192/512), standalone display, dark theme
-- **sw.js**: Service worker with cache-first strategy for same-origin assets, network-first for external (fonts, analytics). Cache name `hexchain-v2`.
+- **sw.js**: Service worker with cache-first strategy for same-origin assets, network-first for external (fonts, analytics). Cache name `hexchain-v4`.
 - **Offline support**: Caches index.html, manifest, icons, background music. Game fully playable offline after first load.
 - **iOS meta tags**: `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, apple-touch-icon
 - **Icons**: 512×512 uses 19-hex grid (radius 2), 192×192 uses 7-hex cluster (radius 1) for clarity at small sizes. Both use game's actual gem gradient colors. SVG format.
