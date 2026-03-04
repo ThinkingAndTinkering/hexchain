@@ -21,6 +21,9 @@ Browser-based mobile puzzle game. Single HTML file, no frameworks, no build step
   - **4+ chain → Color Wipe**: Chain clears first (gravity + refill). THEN after 500ms pause, remaining tiles of that color get highlighted (700ms subtle glow), then slowly fade/shrink away, then gravity + refill fills those gaps. Bonus points (50 per wiped tile), float text "COLOR WIPE!" (matches nova style). Frozen tiles of that color ARE included in wipe. Wildcard tiles are NEVER wiped. Nova tiles of matching color ARE wiped.
   - **6+ chain → Color Wipe + Same-Color Reset** (Classic only): All tiles of that color get age reset to 0
   - **7+ chain → Color Wipe + Global Reset** (Classic only): ALL tiles of ALL colors get age reset to 0, "BOARD RESET!" float text
+- **Celebration tiers** (huge chain/score recognition):
+  - **15+ chain OR 5M+ points → "MEGA CHAIN!"**: Golden confetti burst (60 particles), triumphant power chord SFX, golden float text (30px), golden chain info styling
+  - **20+ chain OR 10M+ points → "GODLIKE!"**: Massive staggered confetti (95 particles in 3 waves), screen flash, ascending fanfare SFX, rainbow-shimmer float text (36px), rainbow gradient chain info styling
 
 ### Special Tiles
 - **Wildcard tile** (`TILE_WILD`): 6-colored hex with each wedge showing one of the 6 game colors + white center highlight + ✦ icon. Matches ANY color in chains. Spawns every 8-10 moves (randomized) as a refill tile. Path color is adopted from the first non-wild tile in the chain. **Never freezes. Never removed by color wipe** (only cleared if part of a chain).
@@ -65,7 +68,7 @@ Target ranges: fast game 5-10K, good game 10-30K, great game high 5 digits.
 - **Audio engine**: Web Audio API for SFX (fully synthesized, no audio files). HTML5 Audio for background music (`background-music.mp3`).
 - **Default OFF** — no AudioContext created until user taps sound button. Setting persisted in localStorage.
 - **Sound toggle**: 🔊/🔇 button in header bar (below title). Lazy-inits AudioContext on first user gesture (browser autoplay policy).
-- **SFX** (12 effects): tile select (ascending blips), path reject (low buzz), chain clear (pentatonic ascending per tile), score pop (bright pluck), streak activation (rising filtered sweep), new high score (major chord arpeggio), tile freeze (crack + noise), difficulty increase (ominous minor 2nd), game over (descending phrase), color wipe (noise whoosh), reshuffle (random pitch flurry), timer tick (urgent clicks when ≤10s)
+- **SFX** (14 effects): tile select (ascending blips), path reject (low buzz), chain clear (pentatonic ascending per tile), score pop (bright pluck), streak activation (rising filtered sweep), new high score (major chord arpeggio), tile freeze (crack + noise), difficulty increase (ominous minor 2nd), game over (descending phrase), color wipe (noise whoosh), reshuffle (random pitch flurry), timer tick (urgent clicks when ≤10s), mega chain (sawtooth power chord + filter sweep), godlike chain (ascending 8-note arpeggio + sustained chord)
 - **Background music**: `background-music.mp3` — loops via HTML5 Audio element, volume 0.3. Replace the file to change the music.
 - **Haptic vibration**: `navigator.vibrate()` wrapper — Android only, silently ignored on iOS. Short pulses on chain clears, buzz on game over, patterns for color wipe/high score/freeze/streak.
 - **Node graph**: Oscillators → per-voice GainNode → sfxGain (0.7) → masterGain (1.0) → destination.
@@ -108,6 +111,10 @@ const NOVA_ENABLED = false;    // feature flag for nova tiles (disabled)
 const WILDCARD_INTERVAL = 8;   // wildcard every 8-10 moves
 const TIME_BONUSES = { 3: 0, 4: 1, 5: 2, 6: 3, 7: 4, 8: 5, 9: 6, 10: 7 };
 const SCORE_TABLE = { 3: 150, 4: 400, 5: 850, 6: 1500, 7: 2500, 8: 4000, 9: 6500, 10: 10000 };
+const CELEBRATION_TIER1_CHAIN = 15;  // "MEGA CHAIN!" threshold
+const CELEBRATION_TIER1_SCORE = 5000000;
+const CELEBRATION_TIER2_CHAIN = 20;  // "GODLIKE!" threshold
+const CELEBRATION_TIER2_SCORE = 10000000;
 ```
 
 ## Version History
@@ -128,10 +135,11 @@ const SCORE_TABLE = { 3: 150, 4: 400, 5: 850, 6: 1500, 7: 2500, 8: 4000, 9: 6500
 - **Toast duration tweaks**: "Tiles are aging faster!" toast now stays 4s (was 1.8s). `showToastMessage` accepts optional duration param.
 - **Score float text**: 500K+ scores linger 3.5s, 100K+ linger 2.5s. Float text now shows comma-formatted scores.
 - **Shuffle rework (unfreeze + shuffle)**: Shuffle button in Classic mode now unfreezes all frozen tiles (setting age to `effectiveFreezeAge - 2` so they show "2" countdown) before reshuffling the entire board. Sprint mode unchanged (just shuffles). Button styled with accent blue glow when available, dims when used. Resets streak multiplier. SW cache bumped to v4.
+- **Celebration effects**: Two tiers of celebration for extraordinary chains. Tier 1 (15+ chain / 5M+ pts): golden "MEGA CHAIN!" float text, 60-particle rainbow confetti, power chord SFX. Tier 2 (20+ chain / 10M+ pts): rainbow-shimmer "GODLIKE!" float text, 95-particle staggered confetti, screen flash, ascending fanfare SFX. New CSS tiers `.tier-mega` (golden) and `.tier-godlike` (rainbow gradient). Screen flash system (`screenFlashes` array) added to canvas render pipeline. SW cache bumped to v6.
 
 ## PWA
 - **manifest.json**: App name, icons (SVG 192/512), standalone display, dark theme
-- **sw.js**: Service worker with cache-first strategy for same-origin assets, network-first for external (fonts, analytics). Cache name `hexchain-v4`.
+- **sw.js**: Service worker with cache-first strategy for same-origin assets, network-first for external (fonts, analytics). Cache name `hexchain-v6`.
 - **Offline support**: Caches index.html, manifest, icons, background music. Game fully playable offline after first load.
 - **iOS meta tags**: `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, apple-touch-icon
 - **Icons**: 512×512 uses 19-hex grid (radius 2), 192×192 uses 7-hex cluster (radius 1) for clarity at small sizes. Both use game's actual gem gradient colors. SVG format.

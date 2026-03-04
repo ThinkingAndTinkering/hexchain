@@ -312,6 +312,26 @@
     animation: chainPulse 0.6s ease;
   }
 
+  .chain-info.tier-mega {
+    font-size: 26px;
+    color: #FFD700;
+    text-shadow: 0 0 24px rgba(255,215,0,0.6);
+    animation: chainPulse 0.7s ease;
+  }
+
+  .chain-info.tier-godlike {
+    font-size: 28px;
+    background: linear-gradient(90deg, #FFD700, #FF4ECD, #7EB8D0, #5BF080);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: chainPulse 0.8s ease;
+    filter: drop-shadow(0 0 12px rgba(255,78,205,0.5));
+  }
+  .chain-info.tier-godlike .chain-label {
+    -webkit-text-fill-color: rgba(255,215,0,0.8);
+  }
+
   @keyframes screenShake {
     0%, 100% { transform: translateX(0); }
     20% { transform: translateX(-3px); }
@@ -1292,6 +1312,18 @@ const SCORE_TABLE = {
   7: 2500, 8: 4000, 9: 6500, 10: 10000
 };
 
+// Celebration tier thresholds (chain length OR single-chain points)
+const CELEBRATION_TIER1_CHAIN = 15;
+const CELEBRATION_TIER1_SCORE = 5000000;
+const CELEBRATION_TIER2_CHAIN = 20;
+const CELEBRATION_TIER2_SCORE = 10000000;
+
+function getCelebrationTier(chainLength, chainPoints) {
+  if (chainLength >= CELEBRATION_TIER2_CHAIN || chainPoints >= CELEBRATION_TIER2_SCORE) return 2;
+  if (chainLength >= CELEBRATION_TIER1_CHAIN || chainPoints >= CELEBRATION_TIER1_SCORE) return 1;
+  return 0;
+}
+
 // Chain tier feedback — random words from pool, tier styling by length
 const CHAIN_WORDS = [
   'Legendary!', 'Incredible!', 'Brilliant!', 'Unbelievable!', 'Insane!',
@@ -1306,7 +1338,9 @@ const CHAIN_WORDS = [
 function getChainTier(length) {
   const label = CHAIN_WORDS[Math.floor(Math.random() * CHAIN_WORDS.length)];
   let tier = '';
-  if (length >= 8) tier = 'legendary';
+  if (length >= CELEBRATION_TIER2_CHAIN) tier = 'godlike';
+  else if (length >= CELEBRATION_TIER1_CHAIN) tier = 'mega';
+  else if (length >= 8) tier = 'legendary';
   else if (length >= 6) tier = 'epic';
   return { label, tier };
 }
@@ -1661,6 +1695,65 @@ function sfxTimerTick(secs) {
   playSineEnv(1200, 0.05, urgency, 'sine');
 }
 
+// ── Celebration SFX ──
+function sfxMegaChain() {
+  if (!soundEnabled || !audioCtx) return;
+  const t = audioCtx.currentTime;
+  // Power chord: C5 + E5 + G5 simultaneously with filter sweep
+  [523.25, 659.25, 783.99].forEach(freq => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+    osc.type = 'sawtooth';
+    osc.frequency.value = freq;
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(800, t);
+    filter.frequency.exponentialRampToValueAtTime(6000, t + 0.3);
+    gain.gain.setValueAtTime(0.08, t);
+    gain.gain.setValueAtTime(0.08, t + 0.25);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.65);
+  });
+  // Bright resolution note at octave C6
+  setTimeout(() => playSineEnv(1046.5, 0.4, 0.12, 'triangle'), 350);
+}
+
+function sfxGodlikeChain() {
+  if (!soundEnabled || !audioCtx) return;
+  // Rapid ascending scale: C5 D5 E5 G5 C6 E6 G6 C7
+  const scaleFreqs = [523.25, 587.33, 659.25, 783.99, 1046.5, 1318.5, 1568, 2093];
+  scaleFreqs.forEach((freq, i) => {
+    setTimeout(() => playSineEnv(freq, 0.3, 0.1, 'triangle'), i * 60);
+  });
+  // After arpeggio: sustained power chord (C6+E6+G6)
+  setTimeout(() => {
+    if (!audioCtx) return;
+    const t2 = audioCtx.currentTime;
+    [1046.5, 1318.5, 1568].forEach(freq => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+      osc.type = 'sawtooth';
+      osc.frequency.value = freq;
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2000, t2);
+      filter.frequency.exponentialRampToValueAtTime(8000, t2 + 0.5);
+      filter.frequency.exponentialRampToValueAtTime(1000, t2 + 1.2);
+      gain.gain.setValueAtTime(0.06, t2);
+      gain.gain.exponentialRampToValueAtTime(0.001, t2 + 1.3);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(sfxGain);
+      osc.start(t2);
+      osc.stop(t2 + 1.4);
+    });
+  }, scaleFreqs.length * 60);
+}
+
 // ── Background music (MP3) ──
 let bgMusic = null;
 let musicPlaying = false;
@@ -1698,6 +1791,8 @@ function hapticTileFreeze() { haptic([30, 20, 30]); }
 function hapticColorWipe() { haptic([50, 30, 50]); }
 function hapticGameOver() { haptic(200); }
 function hapticTimerTick() { haptic(15); }
+function hapticMegaChain() { haptic([80, 40, 80, 40, 120]); }
+function hapticGodlikeChain() { haptic([100, 30, 100, 30, 100, 30, 200]); }
 
 // ── Sound toggles ──
 function loadSetting(key, defaultVal = false) {
@@ -1802,6 +1897,12 @@ let nextSparkleTime = 0;
 
 // Ripple effect for long chains
 const ripples = []; // { cx, cy, startTime, duration, color }
+const screenFlashes = []; // { startTime, duration, color, maxAlpha }
+
+function spawnScreenFlash(color = '#fff', duration = 400, maxAlpha = 0.25) {
+  screenFlashes.push({ startTime: performance.now(), color, duration, maxAlpha });
+  requestRender();
+}
 
 // Chain info display timeout
 let chainInfoTimeout = null;
@@ -1968,9 +2069,15 @@ function renderLoop(timestamp) {
     if (timestamp - ripples[i].startTime >= ripples[i].duration) ripples.splice(i, 1);
   }
 
+  // Clean up expired screen flashes
+  for (let i = screenFlashes.length - 1; i >= 0; i--) {
+    if (timestamp - screenFlashes[i].startTime >= screenFlashes[i].duration) screenFlashes.splice(i, 1);
+  }
+
   const stillAnimating = clearAnims.size > 0 || settleAnims.size > 0 ||
     appearAnims.size > 0 || highlightAnims.size > 0 || particles.length > 0 ||
-    floatTexts.length > 0 || trailGlows.size > 0 || ripples.length > 0;
+    floatTexts.length > 0 || trailGlows.size > 0 || ripples.length > 0 ||
+    screenFlashes.length > 0;
 
   render(timestamp);
 
@@ -2476,6 +2583,18 @@ function render(timestamp) {
   // Particles
   drawParticles(timestamp);
 
+  // Screen flashes
+  for (const sf of screenFlashes) {
+    const t = (timestamp - sf.startTime) / sf.duration;
+    if (t > 1) continue;
+    const alpha = t < 0.15 ? (t / 0.15) * sf.maxAlpha : sf.maxAlpha * (1 - (t - 0.15) / 0.85);
+    ctx.save();
+    ctx.fillStyle = sf.color;
+    ctx.globalAlpha = alpha;
+    ctx.fillRect(0, 0, canvasW, canvasH);
+    ctx.restore();
+  }
+
   // Float texts
   drawFloatTexts(timestamp);
 }
@@ -2571,6 +2690,49 @@ function spawnConfetti() {
   requestRender();
 }
 
+function spawnMegaConfetti() {
+  const colors = ['#FFD700', '#FFA500', '#FF6B6B', '#7EB8D0', '#5BF080', '#FF4ECD', '#fff'];
+  for (let i = 0; i < 60; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2 + Math.random() * 4;
+    particles.push({
+      x: centerX,
+      y: centerY - 20,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 2.5,
+      life: 1,
+      decay: 0.005 + Math.random() * 0.006,
+      r: 2 + Math.random() * 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    });
+  }
+  requestRender();
+}
+
+function spawnGodlikeConfetti() {
+  const colors = ['#FFD700', '#FFA500', '#FF6B6B', '#7EB8D0', '#5BF080', '#FF4ECD', '#fff', '#E8E8F0'];
+  for (let burst = 0; burst < 3; burst++) {
+    setTimeout(() => {
+      const count = burst === 0 ? 35 : 30;
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2.5 + Math.random() * 5;
+        particles.push({
+          x: centerX + (Math.random() - 0.5) * 40,
+          y: centerY - 20 + (Math.random() - 0.5) * 40,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 3,
+          life: 1,
+          decay: 0.004 + Math.random() * 0.005,
+          r: 2 + Math.random() * 3.5,
+          color: colors[Math.floor(Math.random() * colors.length)],
+        });
+      }
+      requestRender();
+    }, burst * 200);
+  }
+}
+
 function updateParticles(timestamp) {
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
@@ -2597,11 +2759,12 @@ function drawParticles(timestamp) {
 }
 
 // Float score texts
-function spawnFloatText(px, py, text, fontSize = 16, duration) {
+function spawnFloatText(px, py, text, fontSize = 16, duration, style) {
   floatTexts.push({
     x: px, y: py,
     text,
     fontSize,
+    style: style || null,
     startTime: performance.now(),
     duration: duration || (fontSize >= 22 ? 1800 : 1300),
   });
@@ -2630,9 +2793,24 @@ function drawFloatTexts(timestamp) {
     ctx.font = `bold ${ft.fontSize}px Inter, system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = ft.fontSize >= 22 ? '#FF6B6B' : '#7EB8D0';
-    ctx.shadowColor = ft.fontSize >= 22 ? 'rgba(255,107,107,0.6)' : 'rgba(126,184,208,0.5)';
-    ctx.shadowBlur = ft.fontSize >= 22 ? 12 : 8;
+    if (ft.style === 'golden') {
+      ctx.fillStyle = '#FFD700';
+      ctx.shadowColor = 'rgba(255,215,0,0.7)';
+      ctx.shadowBlur = 16;
+    } else if (ft.style === 'rainbow') {
+      const hue = ((timestamp * 0.2) + ft.x) % 360;
+      ctx.fillStyle = `hsl(${hue}, 100%, 70%)`;
+      ctx.shadowColor = `hsla(${hue}, 100%, 60%, 0.7)`;
+      ctx.shadowBlur = 20;
+    } else if (ft.fontSize >= 22) {
+      ctx.fillStyle = '#FF6B6B';
+      ctx.shadowColor = 'rgba(255,107,107,0.6)';
+      ctx.shadowBlur = 12;
+    } else {
+      ctx.fillStyle = '#7EB8D0';
+      ctx.shadowColor = 'rgba(126,184,208,0.5)';
+      ctx.shadowBlur = 8;
+    }
     ctx.fillText(ft.text, 0, 0);
     ctx.restore();
   }
@@ -2848,6 +3026,7 @@ function executeChain(path) {
     move_number: movesMade,
     streak_count: streakCount,
     streak_multiplier: streakMultiplier,
+    celebration_tier: getCelebrationTier(length, points),
   });
 
 
@@ -2905,7 +3084,7 @@ function executeChain(path) {
   clearTimeout(chainInfoTimeout);
   chainInfoTimeout = setTimeout(() => {
     $chainInfo.className = 'chain-info';
-  }, length >= 8 ? 2500 : length >= 6 ? 2000 : length >= 4 ? 1600 : 1200);
+  }, length >= CELEBRATION_TIER2_CHAIN ? 4000 : length >= CELEBRATION_TIER1_CHAIN ? 3500 : length >= 8 ? 2500 : length >= 6 ? 2000 : length >= 4 ? 1600 : 1200);
 
   // Save tiles before removal (for clear animation + nova/lightning checks)
   const savedTiles = new Map();
@@ -2943,6 +3122,21 @@ function executeChain(path) {
   const fontSize = length >= 8 ? 28 : length >= 6 ? 22 : length >= 5 ? 18 : 16;
   const floatDuration = points >= 500000 ? 3500 : points >= 100000 ? 2500 : undefined;
   spawnFloatText(centerX + midPixel.x, centerY + midPixel.y, `+${points.toLocaleString()}`, fontSize, floatDuration);
+
+  // Celebration effects for huge chains / scores
+  const celebrationTier = getCelebrationTier(length, points);
+  if (celebrationTier >= 2) {
+    spawnFloatText(centerX, centerY - HEX_SIZE * 5, 'GODLIKE!', 36, 4000, 'rainbow');
+    spawnGodlikeConfetti();
+    spawnScreenFlash('#FFD700', 500, 0.2);
+    sfxGodlikeChain();
+    hapticGodlikeChain();
+  } else if (celebrationTier >= 1) {
+    spawnFloatText(centerX, centerY - HEX_SIZE * 5, 'MEGA CHAIN!', 30, 3000, 'golden');
+    spawnMegaConfetti();
+    sfxMegaChain();
+    hapticMegaChain();
+  }
 
   // Chain record toast (only after first chain)
   if (length > prevBest && prevBest > 0 && length >= 4) {
