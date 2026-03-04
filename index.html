@@ -2653,16 +2653,16 @@ function getHexFromEvent(e) {
   return pixelToAxial(px - centerX, py - centerY, HEX_SIZE);
 }
 
+function ensureAudioReady() {
+  if ((soundEnabled || musicEnabled) && !audioInitialized) initAudio();
+  if (audioInitialized) resumeAudio();
+}
+
 function onPointerDown(e) {
   if (gameOver || animating) return;
   e.preventDefault();
 
-  // Lazy-init audio on first gesture if sound/music was previously enabled
-  if ((soundEnabled || musicEnabled) && !audioInitialized) {
-    initAudio();
-  }
-  // Always try to resume — AudioContext may still be suspended from a prior init
-  if (audioInitialized) resumeAudio();
+  ensureAudioReady();
   if (musicEnabled && !musicPlaying) {
     startAmbientMusic();
   }
@@ -2744,6 +2744,8 @@ function onPointerMove(e) {
 }
 
 function onPointerUp(e) {
+  // pointerup maps to touchend — strongest user gesture for iOS AudioContext
+  ensureAudioReady();
   if (!isDragging) return;
   isDragging = false;
 
